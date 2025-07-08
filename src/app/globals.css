@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -22,5 +23,76 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Arial, Helvetica, sans-serif , 'inter';
+  
+}
+
+
+.custom_scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom_scrollbar::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+.custom_scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(blue , purple, pink);
+  border-radius: 4px;
+}
+
+.c::-webkit-scrollbar-thumb:hover {
+  background: red;
+}
+
+
+@layer utilities {
+  .sidebar-scroll-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .sidebar-scroll-hidden::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Custom styled scrollbar for sidebars */
+  .sidebar-scroll-styled::-webkit-scrollbar {
+    width: 6px;
+  }
+  .sidebar-scroll-styled::-webkit-scrollbar-track {
+    background: #1f2937;
+    border-radius: 3px;
+  }
+  .sidebar-scroll-styled::-webkit-scrollbar-thumb {
+    background: #4b5563;
+    border-radius: 3px;
+  }
+  .sidebar-scroll-styled::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+  }
+  .sidebar-scroll-styled {
+    scrollbar-width: thin;
+    scrollbar-color: #4b5563 #1f2937;
+  }
+  
+  /* Thin scrollbar for sidebars */
+  .sidebar-scroll-thin::-webkit-scrollbar {
+    width: 4px;
+  }
+  .sidebar-scroll-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .sidebar-scroll-thin::-webkit-scrollbar-thumb {
+    background: #6b7280;
+    border-radius: 2px;
+  }
+  .sidebar-scroll-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #6b7280 transparent;
+  }
+}
+
+/* Global sidebar base styles */
+.sidebar-base {
+  @apply w-64 bg-gray-900 h-screen overflow-y-auto;
 }

@@ -1,5 +1,13 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import CursorLightEffect from "@/Pages/CursorEffect/CursorEffect";
 import "./globals.css";
+import { Inter } from 'next/font/google'
+import ReduxProvider from "@/components/Redux/Provider";
+import Navbar from "@/components/Navbar/Navbar";
+import Footer from "@/components/Home/Footer";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -10,6 +18,10 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+})
 
 export const metadata = {
   title: "Create Next App",
@@ -19,10 +31,17 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+       
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.className} ${geistSans.variable} ${geistMono.variable}  custom_scrollbar font-inter`}
       >
-        {children}
+        <ReduxProvider>
+          <CursorLightEffect />
+          <Navbar />
+          {children}
+          <ToastContainer/>
+          <Footer />
+        </ReduxProvider>
       </body>
     </html>
   );
