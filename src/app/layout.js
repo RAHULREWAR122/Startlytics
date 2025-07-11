@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next"
 import CursorLightEffect from "@/Pages/CursorEffect/CursorEffect";
 import "./globals.css";
 import { Inter } from 'next/font/google'
@@ -36,6 +37,7 @@ export default function RootLayout({ children }) {
         className={`${inter.className} ${geistSans.variable} ${geistMono.variable}  custom_scrollbar font-inter`}
       >
         <ReduxProvider>
+           <Analytics/>
           <CursorLightEffect />
           <Navbar />
           {children}
