@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation' // App Router
-// import { useRouter } from 'next/router' // Pages Router - DON'T USE THIS
+import { useRouter } from 'next/navigation'
 
 export function useAuth(redirectTo = '/') {
   const router = useRouter()
@@ -9,7 +8,7 @@ export function useAuth(redirectTo = '/') {
   
   useEffect(() => {
     const token = localStorage.getItem('authToken')
-    const user = localStorage.getItem('userData')
+    const user = JSON.parse(localStorage.getItem('userData'))
     
     if (!token && !user) {
       router.push(redirectTo)

@@ -9,27 +9,38 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-import Hero from '@/Pages/Hero/Hero';
 import ChatAi from '@/Pages/ChatAi/ChatAi';
-import { userDetails } from '@/app/UserDetails/loggedInUserDetails';
+// import { userDetails } from '../../app/UserDetails/loggedInUserDetails';
 import Features from '@/Pages/Features/Features';
-import Pricing from '@/Pages/Pricing/Pricing';
 import { openLoginModal } from '../Redux/LoginModal';
-import { useDispatch } from 'react-redux';
-
-
+import { useDispatch , useSelector} from 'react-redux';
+import Hero from '../Hero/Hero';
+import Pricing from '../Pricing/Pricing';
+import { loadTokenFromLocalStorage , loadUserFromLocalStorage } from '../Redux/AuthSlice';
 export default function HomePage() {
    
   const route = useRouter();
-  const dispatch = useDispatch(); 
-  useEffect(()=>{
-      userDetails();  
-  },[route])
+  const dispatch = useDispatch();
+  const token = useSelector((state)=>state?.userLocalSlice.token)
+  const user = useSelector((state)=>state?.userLocalSlice.user)
+   
+  // console.log('token ------------------- ', token);
+
+   
+    useEffect(()=>{
+        dispatch(loadTokenFromLocalStorage())
+        dispatch(loadUserFromLocalStorage())
+    },[dispatch])
+  
+  
+
+  // useEffect(()=>{
+  //     userDetails();  
+  // },[route])
     
   const getStart = ()=>{
-     const token = localStorage.getItem('authToken');
      if(token){
-        route.push('/dashboard')
+        route.push('/googlesheet')
      }else{
        dispatch(openLoginModal());
      }
@@ -137,7 +148,7 @@ export default function HomePage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button onClick={getStart} className="bg-white cursor-pointer text-blue-600 hover:bg-gray-100 px-8 py-4 rounded-full text-lg font-semibold transition-all duration-300 hover:scale-105">
-                  Start Free Trial
+                  {token ? 'Upload GoogleSheet' : 'Start Free Trial'}
                 </button>
                 
               </div>

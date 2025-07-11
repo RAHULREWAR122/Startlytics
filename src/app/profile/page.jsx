@@ -1,8 +1,8 @@
 import React from 'react'
-import UserDetailsPage from './Profile'
+import ProfilePage from './Profile'
 
 const page = ()=> {
-  return <UserDetailsPage/>
+  return <ProfilePage/>
 }
 
 export default page

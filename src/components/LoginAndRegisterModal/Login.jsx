@@ -5,6 +5,7 @@ import { X, Eye, EyeOff, Loader2, Mail, Lock, Chrome, User } from 'lucide-react'
 import { ToastContainer, toast } from 'react-toastify';
 import { closeLoginModal , openRegisterModal , closeRegisterModal } from '../Redux/LoginModal';
 import { useDispatch , useSelector } from 'react-redux';
+import { saveUserToLocalStorage , saveTokenToLocalStorage } from '../Redux/AuthSlice';
 
 const LoginModal = ({}) => {
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
@@ -75,22 +76,17 @@ const LoginModal = ({}) => {
       }
 
       const { token, user } = data;
-      
-      // Store auth data
-      localStorage.setItem('authToken', token);
-      localStorage.setItem('userData', JSON.stringify(user));
-      
-      if (rememberMe) {
-        localStorage.setItem('rememberMe', 'true');
-      }
-
-      
-      // Close modal after short delay
-      setTimeout(() => {
-        dispatch(closeLoginModal());
-        setLoginForm({ email: '', password: '' });
-        setRememberMe(false);
-      }, 1500);
+      dispatch(saveUserToLocalStorage(user));
+      dispatch(saveTokenToLocalStorage(token));
+     
+      // userDetails();
+      dispatch(closeLoginModal());
+      setLoginForm({ email: '', password: '' });
+      setRememberMe(false); // setTimeout(() => {
+      //   dispatch(closeLoginModal());
+      //   setLoginForm({ email: '', password: '' });
+      //   setRememberMe(false);
+      // }, 1500);
 
     } catch (error) {
       console.error('Login failed:', error);

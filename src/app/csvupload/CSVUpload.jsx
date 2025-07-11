@@ -4,9 +4,11 @@ import { Upload, FileText, CheckCircle, AlertCircle, X, Download, Eye, Loader2, 
 import Papa from 'papaparse';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { userDetails } from '../UserDetails/loggedInUserDetails';
 import { useAuth } from '../AuthPage';
 import LoadingAnimation from '../Animation/LoadingAnimation';
+import { userDetails } from '../UserDetails/loggedInUserDetails';
+import { useSelector , useDispatch } from 'react-redux';
+import { loadUserFromLocalStorage , loadTokenFromLocalStorage } from '@/components/Redux/AuthSlice';
 
 export default function CSVUploadPage() {
   const [dragActive, setDragActive] = useState(false);
@@ -18,10 +20,19 @@ export default function CSVUploadPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [processingToServer, setProcessingToServer] = useState(false);
   
-  const {isLoading} = useAuth();
 
-  const {token} = userDetails();
   const route = useRouter();
+  
+    const dispatch = useDispatch();
+    const token = useSelector((state)=>state?.userLocalSlice.token)
+    const user = useSelector((state)=>state?.userLocalSlice.user)
+    
+      
+    useEffect(()=>{
+        dispatch(loadTokenFromLocalStorage())
+        dispatch(loadUserFromLocalStorage())
+    },[dispatch])
+
 
   const API_BASE_URL = 'https://myprod.onrender.com';
   
@@ -31,20 +42,20 @@ export default function CSVUploadPage() {
 
  
 
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('authToken');
+ const getAuthHeaders = () => {
+  if (typeof window !== 'undefined') {
     return {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     };
+  }
+  return {
+    'Content-Type': 'application/json'
   };
+};
 
-  const getAuthHeadersForFormData = () => {
-    const token = localStorage.getItem('authToken');
-    return {
-      'Authorization': `Bearer ${token}`
-    };
-  };
+
+  
 
   const handleDrag = useCallback((e) => {
     e.preventDefault();
@@ -337,11 +348,15 @@ export default function CSVUploadPage() {
       setLoading(false);
     }
   };
-
+   
+     if(!token){
+       route.push('/')
+     }
+ 
 
   return (
     <div className="min-h-screen bg-gray-900 text-white custom_scrollbar hide-scrollbar overflow-hidden">
-      {isLoading ? <LoadingAnimation/> : 
+      {!token ? <LoadingAnimation/> : 
      <>  
       <div className="absolute top-20 left-20 w-32 h-32 bg-blue-600 rounded-full opacity-20 blur-xl"></div>
       <div className="absolute bottom-40 right-32 w-24 h-24 bg-purple-600 rounded-full opacity-30 blur-lg"></div>
@@ -624,7 +639,7 @@ export default function CSVUploadPage() {
           </div>
         </div>
       </div>
-      </>}d
+      </>}
     </div>
   );
 }

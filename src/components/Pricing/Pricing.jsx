@@ -1,22 +1,32 @@
 'use client'
+import { useDispatch , useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
 import React from 'react'
 import {
   CheckCircle,
-  Star,
   Lock
 } from 'lucide-react';
 import { openLoginModal } from '@/components/Redux/LoginModal';
-import { useDispatch } from 'react-redux';
-import { useRouter } from 'next/navigation';
+import { useState  , useEffect} from 'react';
+// import { userDetails } from '../../app/UserDetails/loggedInUserDetails';
+import { loadUserFromLocalStorage , loadTokenFromLocalStorage } from '../Redux/AuthSlice';
 
 export default function Pricing() {
+  const route = useRouter();
   const dispatch = useDispatch();
-   const route = useRouter();
+  const token = useSelector((state)=>state?.userLocalSlice.token)
+  const user = useSelector((state)=>state?.userLocalSlice.user)
+    
+
+  useEffect(()=>{
+      dispatch(loadTokenFromLocalStorage())
+      dispatch(loadUserFromLocalStorage())
+  },[dispatch])
+
 
   const handleFreeStart = ()=>{
-    const token = localStorage.getItem('authToken')
     if(token){
-      route.push('/googlesheet')
+      route.push('/dashboard')
     }else{
       dispatch(openLoginModal())
     }
@@ -63,8 +73,8 @@ export default function Pricing() {
               <span>csv upload via link</span>
             </li>
           </ul>
-          <button onClick={handleFreeStart} className="w-full bg-gray-700 hover:bg-gray-600 px-6 py-3 rounded-xl font-semibold transition-colors duration-300">
-            Get Started Free
+          <button onClick={handleFreeStart} className="cursor-pointer w-full bg-gray-700 hover:bg-gray-600 px-6 py-3 rounded-xl font-semibold transition-colors duration-300">
+            {token ? 'Go to Dashboard' : 'Get Started Free'}
           </button>
         </div>
 

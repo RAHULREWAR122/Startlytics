@@ -1,139 +1,161 @@
 'use client'
-
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area, ScatterChart, Scatter, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 import { Upload, FileText, Database, TrendingUp, Users, Activity, Settings, LogOut, Plus, Edit2, Trash2, Download, ChevronDown, Filter, BarChart3, PieChart as PieChartIcon, TrendingDown, Zap, Eye, X, Maximize2 } from 'lucide-react';
 import LoadingAnimation from '../Animation/LoadingAnimation';
-import { userDetails } from '../UserDetails/loggedInUserDetails';
+// import { userDetails } from '../UserDetails/loggedInUserDetails';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import SheetModalShow from '@/components/SheetModal/SheetModal';
 import { useAuth } from '../AuthPage';
+import { useDispatch , useSelector } from 'react-redux';
+import { loadUserFromLocalStorage , loadTokenFromLocalStorage } from '@/components/Redux/AuthSlice';
 
 const Dashboard = () => {
-  const [ datasets, setDatasets ] = useState( [] );
-  const [ loading, setLoading ] = useState( true );
-  const [ error, setError ] = useState( null );
-  const [ selectedDataset, setSelectedDataset ] = useState( null );
-  const [ showRenameModal, setShowRenameModal ] = useState( false );
-  const [ newName, setNewName ] = useState( '' );
-  const [ showDatasetSelector, setShowDatasetSelector ] = useState( false );
-  const [ currentViewingDataset, setCurrentViewingDataset ] = useState( null );
-  const [ availableColumns, setAvailableColumns ] = useState( [] );
-  const [ generatedCharts, setGeneratedCharts ] = useState( [] );
-  const [ showAllCharts, setShowAllCharts ] = useState( false );
-  const [ chartStats, setChartStats ] = useState( {} );
-
-  const [ showDetailModal, setShowDetailModal ] = useState( false );
-  const [ detailChart, setDetailChart ] = useState( null );
-  const [ detailChartData, setDetailChartData ] = useState( [] );
-  const [ detailStats, setDetailStats ] = useState( {} );
-  const [showRefresh , setShowRefresh] = useState(false);
-  const [selectedDataSetId , setSelectedDatasetId] = useState('');
-  const route = useRouter();
-  const [showSheet , setShowSheet] = useState(false);
-  const {isLoading} = useAuth();
+  const [datasets, setDatasets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedDataset, setSelectedDataset] = useState(null);
+  const [showRenameModal, setShowRenameModal] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [showDatasetSelector, setShowDatasetSelector] = useState(false);
+  const [currentViewingDataset, setCurrentViewingDataset] = useState(null);
+  const [availableColumns, setAvailableColumns] = useState([]);
+  const [generatedCharts, setGeneratedCharts] = useState([]);
+  const [showAllCharts, setShowAllCharts] = useState(false);
+  const [chartStats, setChartStats] = useState({});
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [detailChart, setDetailChart] = useState(null);
+  const [detailChartData, setDetailChartData] = useState([]);
+  const [detailStats, setDetailStats] = useState({});
+  const [showRefresh, setShowRefresh] = useState(false);
+  const [selectedDataSetId, setSelectedDatasetId] = useState('');
+  const [showSheet, setShowSheet] = useState(false);
+  
+  const router = useRouter();
+  const isLoading = useAuth();
 
   const colorPalettes = {
-    primary: [ '#8B5CF6', '#EC4899', '#10B981', '#F59E0B', '#EF4444', '#06B6D4' ],
-    secondary: [ '#A855F7', '#F472B6', '#34D399', '#FBBF24', '#FB7185', '#38BDF8' ],
-    tertiary: [ '#C084FC', '#F9A8D4', '#6EE7B7', '#FCD34D', '#FCA5A5', '#7DD3FC' ],
-    gradient: [ '#8B5CF6', '#EC4899', '#10B981', '#F59E0B', '#EF4444', '#06B6D4', '#A855F7', '#F472B6' ]
+    primary: ['#8B5CF6', '#EC4899', '#10B981', '#F59E0B', '#EF4444', '#06B6D4'],
+    secondary: ['#A855F7', '#F472B6', '#34D399', '#FBBF24', '#FB7185', '#38BDF8'],
+    tertiary: ['#C084FC', '#F9A8D4', '#6EE7B7', '#FCD34D', '#FCA5A5', '#7DD3FC'],
+    gradient: ['#8B5CF6', '#EC4899', '#10B981', '#F59E0B', '#EF4444', '#06B6D4', '#A855F7', '#F472B6']
   };
 
-   useEffect(()=>{
-     if(!token && !user?.email){
-         route.push('/')
-     }  
-  },[route])
+  const dispatch = useDispatch();
+  const token = useSelector((state)=>state?.userLocalSlice.token)
+  const user = useSelector((state)=>state?.userLocalSlice.user)
+    
+  useEffect(()=>{
+      if(!token && !user?.email){
+         router.push('/')
+      }
+  },[dispatch])
 
-  useEffect( () => {
-    fetchData();
-  }, [] );
-  
 
-  const {token , user} = userDetails();
-  
+  useEffect(()=>{
+       dispatch(loadTokenFromLocalStorage())
+      dispatch(loadUserFromLocalStorage())
+  },[dispatch])
+
+
  
-  
-  const getAuthHeaders = () => {
-      return {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      };
-    };
- 
-  
   const fetchData = async () => {
-   
     try {
-      setLoading( true );
-      const response = await fetch( 'https://myprod.onrender.com/api/users/alldatasets', {
-        headers: getAuthHeaders()
-      } );
+      setLoading(true);
+      const response = await fetch('https://myprod.onrender.com/api/users/alldatasets', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const apiData = await response.json();
       
       console.log('response data is ', apiData);
       
-      const transformedDatasets = apiData.datasets.map( ( dataset, index ) => ( {
+      if (!apiData.datasets || !Array.isArray(apiData.datasets)) {
+        throw new Error('Invalid API response format');
+      }
+      
+      const transformedDatasets = apiData.datasets.map((dataset, index) => ({
         id: dataset.id || index + 1,
         name: dataset.fileName || `Dataset ${index + 1}`,
         source: dataset.source || 'csv',
-        records: dataset.rowCount || dataset.row?.length || 0,
-        lastUpdated: new Date( dataset.uploadedAt ).toLocaleDateString(),
+        records: dataset.rowCount || (dataset.row && dataset.row.length) || 0,
+        lastUpdated: dataset.uploadedAt ? new Date(dataset.uploadedAt).toLocaleDateString() : 'N/A',
         status: 'active',
         rawData: dataset.row || [],
-        columns: dataset.row && dataset.row.length > 0 ? Object.keys( dataset.row[ 0 ] ) : [],
-        sheetUrl : dataset?.sheetUrl || '',
-        lastSyncedAt : dataset?.lastSyncedAt || ''
-      } ) );
+        columns: dataset.row && dataset.row.length > 0 ? Object.keys(dataset.row[0]) : [],
+        sheetUrl: dataset?.sheetUrl || '',
+        lastSyncedAt: dataset?.lastSyncedAt || ''
+      }));
       
-      setDatasets( transformedDatasets );
+      setDatasets(transformedDatasets);
 
-      if ( transformedDatasets.length > 0 ) {
-        setCurrentViewingDataset( transformedDatasets[ 0 ] );
-         setSelectedDatasetId(transformedDatasets[0])
-         generateAllCharts( transformedDatasets[ 0 ] );
-      }
-       if( transformedDatasets[ 0 ]?.sheetUrl){
-           setShowRefresh(true)
+      if (transformedDatasets.length > 0) {
+        setCurrentViewingDataset(transformedDatasets[0]);
+        setSelectedDatasetId(transformedDatasets[0]);
+        generateAllCharts(transformedDatasets[0]);
+        
+        if (transformedDatasets[0]?.sheetUrl) {
+          setShowRefresh(true);
         }
+      }
 
-      setLoading( false );
-    } catch ( err ) {
-      console.error( 'Error fetching data:', err );
-      setError( 'Failed to fetch data from API' );
-      setLoading( false );
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      setError('Failed to fetch data from API');
+      setLoading(false);
     }
   };
 
- 
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  const analyzeColumnTypes = ( data, columns ) => {
-    const analysisColumns = columns.slice( 1 );
+  const analyzeColumnTypes = (data, columns) => {
+    if (!data || !Array.isArray(data) || data.length === 0 || !columns || !Array.isArray(columns)) {
+      return [];
+    }
 
-    const columnAnalysis = analysisColumns.map( col => {
-      const values = data.map( row => row[ col ] ).filter( val => val !== null && val !== undefined && val !== '' );
-      const numericValues = values.filter( val => !isNaN( parseFloat( val ) ) && isFinite( val ) );
-      const uniqueValues = [ ...new Set( values ) ];
+    const analysisColumns = columns.slice(1);
+
+    const columnAnalysis = analysisColumns.map(col => {
+      const values = data.map(row => row[col]).filter(val => val !== null && val !== undefined && val !== '');
+      const numericValues = values.filter(val => !isNaN(parseFloat(val)) && isFinite(val));
+      const uniqueValues = [...new Set(values)];
 
       return {
         name: col,
         type: numericValues.length > values.length * 0.7 ? 'numeric' : 'categorical',
         uniqueCount: uniqueValues.length,
         totalCount: values.length,
-        uniqueValues: uniqueValues.slice( 0, 20 ),
+        uniqueValues: uniqueValues.slice(0, 20),
         hasNulls: values.length < data.length,
-        numericRatio: numericValues.length / values.length,
-        samples: values.slice( 0, 5 )
+        numericRatio: values.length > 0 ? numericValues.length / values.length : 0,
+        samples: values.slice(0, 5)
       };
-    } );
+    });
 
     return columnAnalysis;
   };
 
-  const generateCompleteChartData = ( dataset, chartType, columns, chartId ) => {
-    if ( !dataset || !dataset.rawData || dataset.rawData.length === 0 ) {
+  const calculateVolatility = (values) => {
+    if (!values || values.length < 2) return 0;
+
+    const mean = values.reduce((a, b) => a + b, 0) / values.length;
+    const variance = values.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / values.length;
+    return Math.sqrt(variance).toFixed(2);
+  };
+
+  const generateCompleteChartData = (dataset, chartType, columns, chartId) => {
+    if (!dataset || !dataset.rawData || !Array.isArray(dataset.rawData) || dataset.rawData.length === 0) {
       return { data: [], stats: {} };
     }
 
@@ -141,542 +163,583 @@ const Dashboard = () => {
     let completeData = [];
     let stats = {};
 
-    switch ( chartType ) {
-      case 'bar':
-        const column = columns[ 0 ];
-        completeData = fullData.map( ( row, index ) => ( {
-          name: `${index + 1}`,
-          value: parseFloat( row[ column ] ) || 0,
-          originalValue: row[ column ],
-          rowIndex: index + 1
-        } ) );
+    try {
+      switch (chartType) {
+        case 'bar':
+          if (!columns || columns.length === 0) return { data: [], stats: {} };
+          
+          const column = columns[0];
+          completeData = fullData.map((row, index) => ({
+            name: `${index + 1}`,
+            value: parseFloat(row[column]) || 0,
+            originalValue: row[column],
+            rowIndex: index + 1
+          }));
 
-        const values = completeData.map( d => d.value );
-        stats = {
-          total: values.reduce( ( a, b ) => a + b, 0 ),
-          average: values.length > 0 ? values.reduce( ( a, b ) => a + b, 0 ) / values.length : 0,
-          maximum: Math.max( ...values ),
-          minimum: Math.min( ...values ),
-          count: values.length,
-          nonZeroCount: values.filter( v => v !== 0 ).length
-        };
-        break;
-
-      case 'pie':
-        const categoryColumn = columns[ 0 ];
-        const categoryCount = {};
-        fullData.forEach( row => {
-          const value = row[ categoryColumn ] || 'Unknown';
-          categoryCount[ value ] = ( categoryCount[ value ] || 0 ) + 1;
-        } );
-
-        completeData = Object.entries( categoryCount )
-          .sort( ( [ , a ], [ , b ] ) => b - a )
-          .map( ( [ name, count ], index ) => ( {
-            name: name,
-            value: count,
-            percentage: ( ( count / fullData.length ) * 100 ).toFixed( 2 ),
-            color: colorPalettes.primary[ index % colorPalettes.primary.length ]
-          } ) );
-
-        stats = {
-          totalCategories: completeData.length,
-          totalRecords: fullData.length,
-          mostCommon: completeData[ 0 ]?.name || 'N/A',
-          leastCommon: completeData[ completeData.length - 1 ]?.name || 'N/A',
-          diversity: ( completeData.length / fullData.length * 100 ).toFixed( 2 )
-        };
-        break;
-
-      case 'scatter':
-        const [ col1, col2 ] = columns;
-        completeData = fullData.map( ( row, index ) => ( {
-          x: parseFloat( row[ col1 ] ) || 0,
-          y: parseFloat( row[ col2 ] ) || 0,
-          name: `Point ${index + 1}`,
-          rowIndex: index + 1,
-          originalX: row[ col1 ],
-          originalY: row[ col2 ]
-        } ) );
-
-        const xValues = completeData.map( d => d.x );
-        const yValues = completeData.map( d => d.y );
-
-        const n = completeData.length;
-        const sumX = xValues.reduce( ( a, b ) => a + b, 0 );
-        const sumY = yValues.reduce( ( a, b ) => a + b, 0 );
-        const sumXY = completeData.reduce( ( sum, point ) => sum + ( point.x * point.y ), 0 );
-        const sumX2 = xValues.reduce( ( sum, x ) => sum + ( x * x ), 0 );
-        const sumY2 = yValues.reduce( ( sum, y ) => sum + ( y * y ), 0 );
-
-        const correlation = n > 1 ?
-          ( n * sumXY - sumX * sumY ) / Math.sqrt( ( n * sumX2 - sumX * sumX ) * ( n * sumY2 - sumY * sumY ) ) : 0;
-
-        stats = {
-          correlation: isNaN( correlation ) ? 0 : correlation.toFixed( 3 ),
-          xStats: {
-            min: Math.min( ...xValues ),
-            max: Math.max( ...xValues ),
-            avg: sumX / n
-          },
-          yStats: {
-            min: Math.min( ...yValues ),
-            max: Math.max( ...yValues ),
-            avg: sumY / n
-          },
-          totalPoints: n
-        };
-        break;
-
-      case 'groupedBar':
-        const [ catCol, numCol ] = columns;
-        const groupedData = {};
-        fullData.forEach( row => {
-          const category = row[ catCol ] || 'Unknown';
-          const value = parseFloat( row[ numCol ] ) || 0;
-
-          if ( !groupedData[ category ] ) {
-            groupedData[ category ] = { values: [], sum: 0, count: 0 };
-          }
-          groupedData[ category ].values.push( value );
-          groupedData[ category ].sum += value;
-          groupedData[ category ].count += 1;
-        } );
-
-        completeData = Object.entries( groupedData )
-          .map( ( [ name, data ] ) => ( {
-            name: name,
-            average: data.sum / data.count,
-            total: data.sum,
-            count: data.count,
-            maximum: Math.max( ...data.values ),
-            minimum: Math.min( ...data.values ),
-            values: data.values
-          } ) )
-          .sort( ( a, b ) => b.average - a.average );
-
-        stats = {
-          totalGroups: completeData.length,
-          overallTotal: completeData.reduce( ( sum, group ) => sum + group.total, 0 ),
-          overallAverage: completeData.reduce( ( sum, group ) => sum + group.average, 0 ) / completeData.length,
-          highestGroup: completeData[ 0 ]?.name || 'N/A',
-          lowestGroup: completeData[ completeData.length - 1 ]?.name || 'N/A'
-        };
-        break;
-
-      case 'line':
-      case 'area':
-        const lineColumn = columns[ 0 ];
-        let cumulative = 0;
-        completeData = fullData.map( ( row, index ) => {
-          const value = parseFloat( row[ lineColumn ] ) || 0;
-          if ( chartType === 'area' ) cumulative += value;
-
-          return {
-            index: index + 1,
-            value: value,
-            cumulative: chartType === 'area' ? cumulative : undefined,
-            name: `Point ${index + 1}`,
-            originalValue: row[ lineColumn ]
+          const values = completeData.map(d => d.value);
+          stats = {
+            total: values.reduce((a, b) => a + b, 0),
+            average: values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0,
+            maximum: values.length > 0 ? Math.max(...values) : 0,
+            minimum: values.length > 0 ? Math.min(...values) : 0,
+            count: values.length,
+            nonZeroCount: values.filter(v => v !== 0).length
           };
-        } );
+          break;
 
-        const lineValues = completeData.map( d => d.value );
-        stats = {
-          trend: lineValues.length > 1 ?
-            ( lineValues[ lineValues.length - 1 ] > lineValues[ 0 ] ? 'Increasing' : 'Decreasing' ) : 'Stable',
-          totalChange: lineValues.length > 1 ?
-            lineValues[ lineValues.length - 1 ] - lineValues[ 0 ] : 0,
-          averageValue: lineValues.reduce( ( a, b ) => a + b, 0 ) / lineValues.length,
-          volatility: this.calculateVolatility( lineValues ),
-          finalCumulative: chartType === 'area' ? cumulative : undefined
-        };
-        break;
+        case 'pie':
+          if (!columns || columns.length === 0) return { data: [], stats: {} };
+          
+          const categoryColumn = columns[0];
+          const categoryCount = {};
+          fullData.forEach(row => {
+            const value = row[categoryColumn] || 'Unknown';
+            categoryCount[value] = (categoryCount[value] || 0) + 1;
+          });
 
-      default:
-        completeData = [];
-        stats = {};
+          completeData = Object.entries(categoryCount)
+            .sort(([, a], [, b]) => b - a)
+            .map(([name, count], index) => ({
+              name: name,
+              value: count,
+              percentage: ((count / fullData.length) * 100).toFixed(2),
+              color: colorPalettes.primary[index % colorPalettes.primary.length]
+            }));
+
+          stats = {
+            totalCategories: completeData.length,
+            totalRecords: fullData.length,
+            mostCommon: completeData[0]?.name || 'N/A',
+            leastCommon: completeData[completeData.length - 1]?.name || 'N/A',
+            diversity: (completeData.length / fullData.length * 100).toFixed(2)
+          };
+          break;
+
+        case 'scatter':
+          if (!columns || columns.length < 2) return { data: [], stats: {} };
+          
+          const [col1, col2] = columns;
+          completeData = fullData.map((row, index) => ({
+            x: parseFloat(row[col1]) || 0,
+            y: parseFloat(row[col2]) || 0,
+            name: `Point ${index + 1}`,
+            rowIndex: index + 1,
+            originalX: row[col1],
+            originalY: row[col2]
+          }));
+
+          const xValues = completeData.map(d => d.x);
+          const yValues = completeData.map(d => d.y);
+
+          const n = completeData.length;
+          if (n > 1) {
+            const sumX = xValues.reduce((a, b) => a + b, 0);
+            const sumY = yValues.reduce((a, b) => a + b, 0);
+            const sumXY = completeData.reduce((sum, point) => sum + (point.x * point.y), 0);
+            const sumX2 = xValues.reduce((sum, x) => sum + (x * x), 0);
+            const sumY2 = yValues.reduce((sum, y) => sum + (y * y), 0);
+
+            const correlation = (n * sumXY - sumX * sumY) / Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+
+            stats = {
+              correlation: isNaN(correlation) ? 0 : correlation.toFixed(3),
+              xStats: {
+                min: Math.min(...xValues),
+                max: Math.max(...xValues),
+                avg: sumX / n
+              },
+              yStats: {
+                min: Math.min(...yValues),
+                max: Math.max(...yValues),
+                avg: sumY / n
+              },
+              totalPoints: n
+            };
+          } else {
+            stats = {
+              correlation: 0,
+              xStats: { min: 0, max: 0, avg: 0 },
+              yStats: { min: 0, max: 0, avg: 0 },
+              totalPoints: n
+            };
+          }
+          break;
+
+        case 'groupedBar':
+          if (!columns || columns.length < 2) return { data: [], stats: {} };
+          
+          const [catCol, numCol] = columns;
+          const groupedData = {};
+          fullData.forEach(row => {
+            const category = row[catCol] || 'Unknown';
+            const value = parseFloat(row[numCol]) || 0;
+
+            if (!groupedData[category]) {
+              groupedData[category] = { values: [], sum: 0, count: 0 };
+            }
+            groupedData[category].values.push(value);
+            groupedData[category].sum += value;
+            groupedData[category].count += 1;
+          });
+
+          completeData = Object.entries(groupedData)
+            .map(([name, data]) => ({
+              name: name,
+              average: data.sum / data.count,
+              total: data.sum,
+              count: data.count,
+              maximum: Math.max(...data.values),
+              minimum: Math.min(...data.values),
+              values: data.values
+            }))
+            .sort((a, b) => b.average - a.average);
+
+          stats = {
+            totalGroups: completeData.length,
+            overallTotal: completeData.reduce((sum, group) => sum + group.total, 0),
+            overallAverage: completeData.length > 0 ? completeData.reduce((sum, group) => sum + group.average, 0) / completeData.length : 0,
+            highestGroup: completeData[0]?.name || 'N/A',
+            lowestGroup: completeData[completeData.length - 1]?.name || 'N/A'
+          };
+          break;
+
+        case 'line':
+        case 'area':
+          if (!columns || columns.length === 0) return { data: [], stats: {} };
+          
+          const lineColumn = columns[0];
+          let cumulative = 0;
+          completeData = fullData.map((row, index) => {
+            const value = parseFloat(row[lineColumn]) || 0;
+            if (chartType === 'area') cumulative += value;
+
+            return {
+              index: index + 1,
+              value: value,
+              cumulative: chartType === 'area' ? cumulative : undefined,
+              name: `Point ${index + 1}`,
+              originalValue: row[lineColumn]
+            };
+          });
+
+          const lineValues = completeData.map(d => d.value);
+          stats = {
+            trend: lineValues.length > 1 ?
+              (lineValues[lineValues.length - 1] > lineValues[0] ? 'Increasing' : 'Decreasing') : 'Stable',
+            totalChange: lineValues.length > 1 ?
+              lineValues[lineValues.length - 1] - lineValues[0] : 0,
+            averageValue: lineValues.length > 0 ? lineValues.reduce((a, b) => a + b, 0) / lineValues.length : 0,
+            volatility: calculateVolatility(lineValues),
+            finalCumulative: chartType === 'area' ? cumulative : undefined
+          };
+          break;
+
+        default:
+          completeData = [];
+          stats = {};
+        }
+    } catch (error) {
+      console.error('Error generating chart data:', error);
+      completeData = [];
+      stats = {};
     }
 
     return { data: completeData, stats };
   };
 
-  const calculateVolatility = ( values ) => {
-    if ( values.length < 2 ) return 0;
+  const showChartDetail = (chart) => {
+    const columns = getChartColumns(chart);
+    const { data, stats } = generateCompleteChartData(currentViewingDataset, chart.type, columns, chart.id);
 
-    const mean = values.reduce( ( a, b ) => a + b, 0 ) / values.length;
-    const variance = values.reduce( ( sum, value ) => sum + Math.pow( value - mean, 2 ), 0 ) / values.length;
-    return Math.sqrt( variance ).toFixed( 2 );
+    setDetailChart(chart);
+    setDetailChartData(data);
+    setDetailStats(stats);
+    setShowDetailModal(true);
   };
 
-  const showChartDetail = ( chart ) => {
-    const columns = getChartColumns( chart );
-    const { data, stats } = generateCompleteChartData( currentViewingDataset, chart.type, columns, chart.id );
-
-    setDetailChart( chart );
-    setDetailChartData( data );
-    setDetailStats( stats );
-    setShowDetailModal( true );
-  };
-
-  const getChartColumns = ( chart ) => {
-    switch ( chart.type ) {
-      case 'bar':
-      case 'line':
-      case 'area':
-        return [ chart.dataKey ];
-      case 'pie':
-        const pieMatch = chart.title.match( /^(.+) Categories$/ );
-        return pieMatch ? [ pieMatch[ 1 ] ] : [ '' ];
-      case 'scatter':
-        const scatterMatch = chart.title.match( /^(.+) vs (.+)$/ );
-        return scatterMatch ? [ scatterMatch[ 1 ], scatterMatch[ 2 ] ] : [ '', '' ];
-      case 'groupedBar':
-        const groupMatch = chart.title.match( /^(.+) by (.+)$/ );
-        return groupMatch ? [ groupMatch[ 2 ], groupMatch[ 1 ] ] : [ '', '' ];
-      case 'multiBar':
-        return chart.columns || [];
-      default:
-        return [];
+  const getChartColumns = (chart) => {
+    if (!chart) return [];
+    
+    try {
+      switch (chart.type) {
+        case 'bar':
+        case 'line':
+        case 'area':
+          return [chart.dataKey];
+        case 'pie':
+          const pieMatch = chart.title.match(/^(.+) Categories$/);
+          return pieMatch ? [pieMatch[1]] : [''];
+        case 'scatter':
+          const scatterMatch = chart.title.match(/^(.+) vs (.+)$/);
+          return scatterMatch ? [scatterMatch[1], scatterMatch[2]] : ['', ''];
+        case 'groupedBar':
+          const groupMatch = chart.title.match(/^(.+) by (.+)$/);
+          return groupMatch ? [groupMatch[2], groupMatch[1]] : ['', ''];
+        case 'multiBar':
+          return chart.columns || [];
+        default:
+          return [];
+      }
+    } catch (error) {
+      console.error('Error getting chart columns:', error);
+      return [];
     }
   };
 
-  const generateAllCharts = ( dataset ) => {
-    if ( !dataset || !dataset.rawData || dataset.rawData.length === 0 ) {
-      setGeneratedCharts( [] );
-      setAvailableColumns( [] );
-      setChartStats( {} );
+  const generateAllCharts = (dataset) => {
+    if (!dataset || !dataset.rawData || !Array.isArray(dataset.rawData) || dataset.rawData.length === 0) {
+      setGeneratedCharts([]);
+      setAvailableColumns([]);
+      setChartStats({});
       return;
     }
 
-    const columns = dataset.columns;
-    setAvailableColumns( columns );
+    try {
+      const columns = dataset.columns || [];
+      setAvailableColumns(columns);
 
-    const columnAnalysis = analyzeColumnTypes( dataset.rawData, columns );
-    const numericColumns = columnAnalysis.filter( col => col.type === 'numeric' );
-    const categoricalColumns = columnAnalysis.filter( col => col.type === 'categorical' );
+      const columnAnalysis = analyzeColumnTypes(dataset.rawData, columns);
+      const numericColumns = columnAnalysis.filter(col => col.type === 'numeric');
+      const categoricalColumns = columnAnalysis.filter(col => col.type === 'categorical');
 
-    const charts = [];
-    let chartId = 1;
+      const charts = [];
+      let chartId = 1;
 
-    const stats = {
-      totalRecords: dataset.rawData.length,
-      numericColumns: numericColumns.length,
-      categoricalColumns: categoricalColumns.length,
-      totalColumns: columnAnalysis.length
-    };
-
-
-    numericColumns.forEach( col => {
-      if ( charts.length >= 40 ) return;
-
-      const data = dataset.rawData
-        .map( row => ( { name: `${dataset.rawData.indexOf( row ) + 1}`, [ col.name ]: parseFloat( row[ col.name ] ) || 0 } ) )
-        .slice( 0, 20 );
-
-      charts.push( {
-        id: chartId++,
-        title: `${col.name} Distribution`,
-        type: 'bar',
-        data: data,
-        dataKey: col.name,
-        description: `Distribution of values in ${col.name} column`
-      } );
-    } );
-
-    categoricalColumns.forEach( col => {
-      if ( charts.length >= 40 ) return;
-
-      const categoryCount = {};
-      dataset.rawData.forEach( row => {
-        const value = row[ col.name ] || 'Unknown';
-        categoryCount[ value ] = ( categoryCount[ value ] || 0 ) + 1;
-      } );
-
-      const pieData = Object.entries( categoryCount )
-        .sort( ( [ , a ], [ , b ] ) => b - a )
-        .slice( 0, 8 )
-        .map( ( [ name, count ], index ) => ( {
-          name: name.length > 15 ? name.substring( 0, 15 ) + '...' : name,
-          value: count,
-          color: colorPalettes.primary[ index % colorPalettes.primary.length ]
-        } ) );
-
-      charts.push( {
-        id: chartId++,
-        title: `${col.name} Categories`,
-        type: 'pie',
-        data: pieData,
-        description: `Category distribution for ${col.name}`
-      } );
-    } );
-
-    for ( let i = 0; i < numericColumns.length && charts.length < 40; i++ ) {
-      for ( let j = i + 1; j < numericColumns.length && charts.length < 40; j++ ) {
-        const col1 = numericColumns[ i ];
-        const col2 = numericColumns[ j ];
-
-        const scatterData = dataset.rawData
-          .slice( 0, 50 )
-          .map( row => ( {
-            x: parseFloat( row[ col1.name ] ) || 0,
-            y: parseFloat( row[ col2.name ] ) || 0,
-            name: `Point ${dataset.rawData.indexOf( row ) + 1}`
-          } ) );
-
-        charts.push( {
-          id: chartId++,
-          title: `${col1.name} vs ${col2.name}`,
-          type: 'scatter',
-          data: scatterData,
-          description: `Correlation between ${col1.name} and ${col2.name}`
-        } );
-      }
-    }
-
-    categoricalColumns.forEach( catCol => {
-      numericColumns.forEach( numCol => {
-        if ( charts.length >= 40 ) return;
-
-        const groupedData = {};
-        dataset.rawData.forEach( row => {
-          const category = row[ catCol.name ] || 'Unknown';
-          const value = parseFloat( row[ numCol.name ] ) || 0;
-
-          if ( !groupedData[ category ] ) {
-            groupedData[ category ] = { sum: 0, count: 0, avg: 0 };
-          }
-          groupedData[ category ].sum += value;
-          groupedData[ category ].count += 1;
-          groupedData[ category ].avg = groupedData[ category ].sum / groupedData[ category ].count;
-        } );
-
-        const chartData = Object.entries( groupedData )
-          .sort( ( [ , a ], [ , b ] ) => b.avg - a.avg )
-          .slice( 0, 10 )
-          .map( ( [ name, data ] ) => ( {
-            name: name.length > 12 ? name.substring( 0, 12 ) + '...' : name,
-            average: Math.round( data.avg * 100 ) / 100,
-            total: data.sum,
-            count: data.count
-          } ) );
-
-        charts.push( {
-          id: chartId++,
-          title: `${numCol.name} by ${catCol.name}`,
-          type: 'groupedBar',
-          data: chartData,
-          description: `Average ${numCol.name} grouped by ${catCol.name}`
-        } );
-      } );
-    } );
-
-    numericColumns.forEach( col => {
-      if ( charts.length >= 40 ) return;
-
-      const lineData = dataset.rawData
-        .slice( 0, 30 )
-        .map( ( row, index ) => ( {
-          index: index + 1,
-          value: parseFloat( row[ col.name ] ) || 0,
-          name: `Point ${index + 1}`
-        } ) );
-
-      charts.push( {
-        id: chartId++,
-        title: `${col.name} Trend`,
-        type: 'line',
-        data: lineData,
-        dataKey: 'value',
-        description: `Trend analysis for ${col.name}`
-      } );
-    } );
-
-    numericColumns.forEach( col => {
-      if ( charts.length >= 40 ) return;
-
-      let cumulative = 0;
-      const areaData = dataset.rawData
-        .slice( 0, 25 )
-        .map( ( row, index ) => {
-          cumulative += parseFloat( row[ col.name ] ) || 0;
-          return {
-            index: index + 1,
-            value: parseFloat( row[ col.name ] ) || 0,
-            cumulative: cumulative,
-            name: `Point ${index + 1}`
-          };
-        } );
-
-      charts.push( {
-        id: chartId++,
-        title: `${col.name} Cumulative`,
-        type: 'area',
-        data: areaData,
-        description: `Cumulative analysis for ${col.name}`
-      } );
-    } );
-
-    if ( numericColumns.length >= 2 ) {
-      const multiData = dataset.rawData
-        .slice( 0, 15 )
-        .map( ( row, index ) => {
-          const dataPoint = { name: `Item ${index + 1}` };
-          numericColumns.slice( 0, 4 ).forEach( col => {
-            dataPoint[ col.name ] = parseFloat( row[ col.name ] ) || 0;
-          } );
-          return dataPoint;
-        } );
-
-      if ( charts.length < 40 ) {
-        charts.push( {
-          id: chartId++,
-          title: 'Multi-Column Comparison',
-          type: 'multiBar',
-          data: multiData,
-          columns: numericColumns.slice( 0, 4 ).map( col => col.name ),
-          description: 'Comparison across multiple numeric columns'
-        } );
-      }
-    }
-
-    const summaryData = numericColumns.slice( 0, 8 ).map( col => {
-      const values = dataset.rawData
-        .map( row => parseFloat( row[ col.name ] ) || 0 )
-        .filter( val => !isNaN( val ) );
-
-      const sum = values.reduce( ( a, b ) => a + b, 0 );
-      const avg = sum / values.length;
-      const max = Math.max( ...values );
-      const min = Math.min( ...values );
-
-      return {
-        name: col.name.length > 10 ? col.name.substring( 0, 10 ) + '...' : col.name,
-        average: Math.round( avg * 100 ) / 100,
-        maximum: max,
-        minimum: min,
-        total: Math.round( sum * 100 ) / 100
+      const stats = {
+        totalRecords: dataset.rawData.length,
+        numericColumns: numericColumns.length,
+        categoricalColumns: categoricalColumns.length,
+        totalColumns: columnAnalysis.length
       };
-    } );
 
-    if ( charts.length < 40 && summaryData.length > 0 ) {
-      charts.push( {
-        id: chartId++,
-        title: 'Column Statistics Summary',
-        type: 'summaryBar',
-        data: summaryData,
-        description: 'Statistical summary of numeric columns'
-      } );
+      numericColumns.forEach(col => {
+        if (charts.length >= 40) return;
+
+        const data = dataset.rawData
+          .map(row => ({ name: `${dataset.rawData.indexOf(row) + 1}`, [col.name]: parseFloat(row[col.name]) || 0 }))
+          .slice(0, 20);
+
+        charts.push({
+          id: chartId++,
+          title: `${col.name} Distribution`,
+          type: 'bar',
+          data: data,
+          dataKey: col.name,
+          description: `Distribution of values in ${col.name} column`
+        });
+      });
+
+      // Generate pie charts for categorical columns
+      categoricalColumns.forEach(col => {
+        if (charts.length >= 40) return;
+
+        const categoryCount = {};
+        dataset.rawData.forEach(row => {
+          const value = row[col.name] || 'Unknown';
+          categoryCount[value] = (categoryCount[value] || 0) + 1;
+        });
+
+        const pieData = Object.entries(categoryCount)
+          .sort(([, a], [, b]) => b - a)
+          .slice(0, 8)
+          .map(([name, count], index) => ({
+            name: name.length > 15 ? name.substring(0, 15) + '...' : name,
+            value: count,
+            color: colorPalettes.primary[index % colorPalettes.primary.length]
+          }));
+
+        charts.push({
+          id: chartId++,
+          title: `${col.name} Categories`,
+          type: 'pie',
+          data: pieData,
+          description: `Category distribution for ${col.name}`
+        });
+      });
+
+      // Generate scatter plots
+      for (let i = 0; i < numericColumns.length && charts.length < 40; i++) {
+        for (let j = i + 1; j < numericColumns.length && charts.length < 40; j++) {
+          const col1 = numericColumns[i];
+          const col2 = numericColumns[j];
+
+          const scatterData = dataset.rawData
+            .slice(0, 50)
+            .map(row => ({
+              x: parseFloat(row[col1.name]) || 0,
+              y: parseFloat(row[col2.name]) || 0,
+              name: `Point ${dataset.rawData.indexOf(row) + 1}`
+            }));
+
+          charts.push({
+            id: chartId++,
+            title: `${col1.name} vs ${col2.name}`,
+            type: 'scatter',
+            data: scatterData,
+            description: `Correlation between ${col1.name} and ${col2.name}`
+          });
+        }
+      }
+
+      // Generate grouped bar charts
+      categoricalColumns.forEach(catCol => {
+        numericColumns.forEach(numCol => {
+          if (charts.length >= 40) return;
+
+          const groupedData = {};
+          dataset.rawData.forEach(row => {
+            const category = row[catCol.name] || 'Unknown';
+            const value = parseFloat(row[numCol.name]) || 0;
+
+            if (!groupedData[category]) {
+              groupedData[category] = { sum: 0, count: 0, avg: 0 };
+            }
+            groupedData[category].sum += value;
+            groupedData[category].count += 1;
+            groupedData[category].avg = groupedData[category].sum / groupedData[category].count;
+          });
+
+          const chartData = Object.entries(groupedData)
+            .sort(([, a], [, b]) => b.avg - a.avg)
+            .slice(0, 10)
+            .map(([name, data]) => ({
+              name: name.length > 12 ? name.substring(0, 12) + '...' : name,
+              average: Math.round(data.avg * 100) / 100,
+              total: data.sum,
+              count: data.count
+            }));
+
+          charts.push({
+            id: chartId++,
+            title: `${numCol.name} by ${catCol.name}`,
+            type: 'groupedBar',
+            data: chartData,
+            description: `Average ${numCol.name} grouped by ${catCol.name}`
+          });
+        });
+      });
+
+      // Generate line charts
+      numericColumns.forEach(col => {
+        if (charts.length >= 40) return;
+
+        const lineData = dataset.rawData
+          .slice(0, 30)
+          .map((row, index) => ({
+            index: index + 1,
+            value: parseFloat(row[col.name]) || 0,
+            name: `Point ${index + 1}`
+          }));
+
+        charts.push({
+          id: chartId++,
+          title: `${col.name} Trend`,
+          type: 'line',
+          data: lineData,
+          dataKey: 'value',
+          description: `Trend analysis for ${col.name}`
+        });
+      });
+
+      // Generate area charts
+      numericColumns.forEach(col => {
+        if (charts.length >= 40) return;
+
+        let cumulative = 0;
+        const areaData = dataset.rawData
+          .slice(0, 25)
+          .map((row, index) => {
+            cumulative += parseFloat(row[col.name]) || 0;
+            return {
+              index: index + 1,
+              value: parseFloat(row[col.name]) || 0,
+              cumulative: cumulative,
+              name: `Point ${index + 1}`
+            };
+          });
+
+        charts.push({
+          id: chartId++,
+          title: `${col.name} Cumulative`,
+          type: 'area',
+          data: areaData,
+          description: `Cumulative analysis for ${col.name}`
+        });
+      });
+
+      // Generate multi-column comparison
+      if (numericColumns.length >= 2) {
+        const multiData = dataset.rawData
+          .slice(0, 15)
+          .map((row, index) => {
+            const dataPoint = { name: `Item ${index + 1}` };
+            numericColumns.slice(0, 4).forEach(col => {
+              dataPoint[col.name] = parseFloat(row[col.name]) || 0;
+            });
+            return dataPoint;
+          });
+
+        if (charts.length < 40) {
+          charts.push({
+            id: chartId++,
+            title: 'Multi-Column Comparison',
+            type: 'multiBar',
+            data: multiData,
+            columns: numericColumns.slice(0, 4).map(col => col.name),
+            description: 'Comparison across multiple numeric columns'
+          });
+        }
+      }
+
+      // Generate summary statistics
+      const summaryData = numericColumns.slice(0, 8).map(col => {
+        const values = dataset.rawData
+          .map(row => parseFloat(row[col.name]) || 0)
+          .filter(val => !isNaN(val));
+
+        const sum = values.reduce((a, b) => a + b, 0);
+        const avg = values.length > 0 ? sum / values.length : 0;
+        const max = values.length > 0 ? Math.max(...values) : 0;
+        const min = values.length > 0 ? Math.min(...values) : 0;
+
+        return {
+          name: col.name.length > 10 ? col.name.substring(0, 10) + '...' : col.name,
+          average: Math.round(avg * 100) / 100,
+          maximum: max,
+          minimum: min,
+          total: Math.round(sum * 100) / 100
+        };
+      });
+
+      if (charts.length < 40 && summaryData.length > 0) {
+        charts.push({
+          id: chartId++,
+          title: 'Column Statistics Summary',
+          type: 'summaryBar',
+          data: summaryData,
+          description: 'Statistical summary of numeric columns'
+        });
+      }
+
+      setGeneratedCharts(charts);
+      setChartStats(stats);
+    } catch (error) {
+      console.error('Error generating charts:', error);
+      setGeneratedCharts([]);
+      setChartStats({});
     }
-
-    setGeneratedCharts( charts );
-    setChartStats( stats );
   };
 
-  const renderChart = ( chart, isDetailed = false ) => {
+  const renderChart = (chart, isDetailed = false) => {
+    if (!chart) return <div className="text-gray-400">No chart data available</div>;
+    
     const colors = colorPalettes.primary;
     const data = isDetailed ? detailChartData : chart.data;
 
-    switch ( chart?.type ) {
+    if (!data || data.length === 0) {
+      return <div className="text-gray-400">No data available for this chart</div>;
+    }
+     
+    try {
+      switch (chart?.type) {
       case 'bar':
-        return (
-          <ResponsiveContainer width="100%" height={isDetailed ? 400 : 300}>
-            <BarChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="name" stroke="#9CA3AF" />
-              <YAxis stroke="#9CA3AF" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#1F2937',
-                  border: '1px solid #374151',
-                  borderRadius: '8px'
-                }}
-              />
-              <Bar dataKey={isDetailed ? 'value' : chart.dataKey} fill={colors[ 0 ]} />
-            </BarChart>
-          </ResponsiveContainer>
-        );
+          return (
+            <ResponsiveContainer width="100%" height={isDetailed ? 400 : 300}>
+              <BarChart data={data}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="name" stroke="#9CA3AF" />
+                <YAxis stroke="#9CA3AF" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#1F2937',
+                    border: '1px solid #374151',
+                    borderRadius: '8px'
+                  }}
+                />
+                <Bar dataKey={isDetailed ? 'value' : chart.dataKey} fill={colors[0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          );
 
-      case 'pie':
-        return (
-          <ResponsiveContainer width="100%" style={{ zIndex: 0 }} height={isDetailed ? 400 : 300}>
-            <PieChart>
-              <Pie
-                data={data?.length > 40 ? data?.slice( 0, 20 ) : data}
-                cx="50%"
-                cy="50%"
-                outerRadius={isDetailed ? 150 : 100}
-                dataKey="value"
-                label={( { name, value, percentage } ) =>
-                  isDetailed ? `${name?.slice( 0, 10 )}... :  ${percentage}%` : `${name}: ${value}`
-                }
-              >
-                {data.map( ( entry, index ) => (
-                  <Cell key={`cell-${index}`} fill={entry.color || colors[ index % colors.length ]} />
-                ) )}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        );
+        case 'pie':
+          return (
+            <ResponsiveContainer width="100%" style={{ zIndex: 0 }} height={isDetailed ? 400 : 300}>
+              <PieChart>
+                <Pie
+                  data={data?.length > 40 ? data?.slice(0, 20) : data}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={isDetailed ? 150 : 100}
+                  dataKey="value"
+                  label={({ name, value, percentage }) =>
+                    isDetailed ? `${name?.slice(0, 10)}... :  ${percentage}%` : `${name}: ${value}`
+                  }
+                >
+                  {data.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color || colors[index % colors.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          );
 
-      case 'scatter':
-        return (
-          <ResponsiveContainer width="100%" height={isDetailed ? 400 : 300}>
-            <ScatterChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="x" stroke="#9CA3AF" />
-              <YAxis dataKey="y" stroke="#9CA3AF" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#1F2937',
-                  border: '1px solid #374151',
-                  borderRadius: '8px'
-                }}
-              />
-              <Scatter dataKey="y" fill={colors[ 2 ]} />
-            </ScatterChart>
-          </ResponsiveContainer>
-        );
+        case 'scatter':
+          return (
+            <ResponsiveContainer width="100%" height={isDetailed ? 400 : 300}>
+              <ScatterChart data={data}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="x" stroke="#9CA3AF" />
+                <YAxis dataKey="y" stroke="#9CA3AF" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#1F2937',
+                    border: '1px solid #374151',
+                    borderRadius: '8px'
+                  }}
+                />
+                <Scatter dataKey="y" fill={colors[2]} />
+              </ScatterChart>
+            </ResponsiveContainer>
+          );
 
-      case 'line':
-        return (
-          <ResponsiveContainer width="100%" height={isDetailed ? 400 : 300}>
-            <LineChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="index" stroke="#9CA3AF" />
-              <YAxis stroke="#9CA3AF" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#1F2937',
-                  border: '1px solid #374151',
-                  borderRadius: '8px'
-                }}
-              />
-              <Line type="monotone" dataKey={isDetailed ? 'value' : chart.dataKey} stroke={colors[ 1 ]} strokeWidth={2} />
-            </LineChart>
-          </ResponsiveContainer>
-        );
+        case 'line':
+          return (
+            <ResponsiveContainer width="100%" height={isDetailed ? 400 : 300}>
+              <LineChart data={data}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="index" stroke="#9CA3AF" />
+                <YAxis stroke="#9CA3AF" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#1F2937',
+                    border: '1px solid #374151',
+                    borderRadius: '8px'
+                  }}
+                />
+                <Line type="monotone" dataKey={isDetailed ? 'value' : chart.dataKey} stroke={colors[1]} strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          );
 
-      case 'area':
-        return (
-          <ResponsiveContainer width="100%" height={isDetailed ? 400 : 300}>
-            <AreaChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="index" stroke="#9CA3AF" />
-              <YAxis stroke="#9CA3AF" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#1F2937',
-                  border: '1px solid #374151',
-                  borderRadius: '8px'
-                }}
-              />
-              <Area type="monotone" dataKey="cumulative" stroke={colors[ 3 ]} fill={colors[ 3 ]} fillOpacity={0.3} />
-            </AreaChart>
-          </ResponsiveContainer>
-        );
-
+        case 'area':
+          return (
+            <ResponsiveContainer width="100%" height={isDetailed ? 400 : 300}>
+              <AreaChart data={data}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="index" stroke="#9CA3AF" />
+                <YAxis stroke="#9CA3AF" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#1F2937',
+                    border: '1px solid #374151',
+                    borderRadius: '8px'
+                  }}
+                />
+                <Area type="monotone" dataKey="cumulative" stroke={colors[3]} fill={colors[3]} fillOpacity={0.3} />
+              </AreaChart>
+            </ResponsiveContainer>
+          );
       case 'groupedBar':
         return (
           <ResponsiveContainer width="100%" height={isDetailed ? 400 : 300}>
@@ -718,7 +781,7 @@ const Dashboard = () => {
           </ResponsiveContainer>
         );
 
-      case 'summaryBar':
+       case 'summaryBar':
         return (
           <ResponsiveContainer width="100%" height={isDetailed ? 400 : 300}>
             <BarChart data={data}>
@@ -741,9 +804,14 @@ const Dashboard = () => {
 
       default:
         return <div className="text-gray-400">Chart type not supported</div>;
+     
     }
-  };
-
+    } catch (error) {
+      
+    }
+    
+}
+  
   const handleDatasetSelection = ( dataset ) => {
     setCurrentViewingDataset( dataset );
     if(dataset?.sheetUrl){
@@ -856,10 +924,11 @@ const Dashboard = () => {
 
   return (<>
     {isLoading ? <LoadingAnimation/> :  
-    <>
+     <>
+      <>
     {showSheet && selectedDataSetId  && 
        <div onClick={()=>setShowSheet(false)} className='fixed h-[100%] w-[100%] top-0 left-0 backdrop-blur-xl flex justify-center items-center z-50  inset-0'>
-        <SheetModalShow sheetData={selectedDataSetId}/>
+        <SheetModalShow sheetData={selectedDataSetId}/> 
       </div>
      }
 
@@ -1405,7 +1474,9 @@ const Dashboard = () => {
         </div>
       )}
           
-    </>} 
+    </>
+     </>
+   } 
     </> );
 };
 

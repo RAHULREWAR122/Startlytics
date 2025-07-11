@@ -1,9 +1,13 @@
 'use client'
-import { useState } from 'react';
+import { useState , useEffect } from 'react';
 import { ExternalLink, Globe, Lock, CheckCircle, AlertCircle, RefreshCw, Eye, Settings, Upload } from 'lucide-react';
 import Papa from 'papaparse';
 import LoadingAnimation from '../Animation/LoadingAnimation';
 import { useAuth } from '../AuthPage';
+import { userDetails } from '../UserDetails/loggedInUserDetails';
+import { useSelector , useDispatch } from 'react-redux';
+import { loadUserFromLocalStorage , loadTokenFromLocalStorage } from '@/components/Redux/AuthSlice';
+import { useRouter } from 'next/navigation';
 
 const GoogleSheetsUpload = () => {
   const [sheetUrl, setSheetUrl] = useState('');
@@ -12,12 +16,22 @@ const GoogleSheetsUpload = () => {
   const [uploading, setUploading] = useState(false);
   const [importedSheets, setImportedSheets] = useState([]);
   const [previewData, setPreviewData] = useState(null);
+  const [selectedSheetId, setSelectedSheetId] = useState(null);
   const [urlError, setUrlError] = useState('');
   const [uploadError, setUploadError] = useState('');
   const [uploadSuccess, setUploadSuccess] = useState('');
-  const {isLoading} = useAuth();
+  
+  const route = useRouter()
+  const dispatch = useDispatch();
+  const token = useSelector((state)=>state?.userLocalSlice.token)
+      
+  useEffect(()=>{
+          dispatch(loadTokenFromLocalStorage())
+          dispatch(loadUserFromLocalStorage())
+  },[dispatch , token])
+  
 
-   const validateUrl = (url) => {
+  const validateUrl = (url) => {
     const csvRegex = /\.(csv)$/i;
     const googleSheetsRegex = /^https:\/\/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/;
     const csvUrlRegex = /https?:\/\/.*\.csv/i;
@@ -42,9 +56,6 @@ const GoogleSheetsUpload = () => {
     return url;
   };
 
-  // console.log('====================================');
-  // console.log('connected sheet ---- ', );
-  // console.log('====================================');
   const parseCSVFromUrl = async (url) => {
     return new Promise((resolve, reject) => {
       Papa.parse(url, {
@@ -67,6 +78,39 @@ const GoogleSheetsUpload = () => {
     });
   };
 
+  const createPreviewData = (sheet) => {
+    if (!sheet || !sheet.data || sheet.data.length === 0) return null;
+
+    const headers = Object.keys(sheet.data[0] || {});
+    const previewRows = sheet.data.slice(0, 6).map(row => {
+      return headers.map(header => {
+        const value = row[header];
+        return value !== undefined && value !== null ? String(value) : '';
+      });
+    });
+
+    return {
+      sheetName: sheet.name,
+      headers: headers,
+      rows: previewRows,
+      totalRows: sheet.data.length,
+      sheetId: sheet.id
+    };
+  };
+
+  const updatePreviewData = (sheetId) => {
+    const sheet = importedSheets.find(s => s.id === sheetId);
+    const preview = createPreviewData(sheet);
+    setPreviewData(preview);
+  };
+
+  const handleSheetSelection = (sheetId) => {
+    setSelectedSheetId(sheetId);
+    updatePreviewData(sheetId);
+    setUploadError('');
+    setUploadSuccess('');
+  };
+
   const handleImport = async () => {
     if (!validateUrl(sheetUrl)) {
       setUrlError('Please enter a valid Google Sheets URL, Google Drive CSV link, or direct CSV URL');
@@ -75,7 +119,6 @@ const GoogleSheetsUpload = () => {
     
     setUrlError('');
     setImporting(true);
-    setPreviewData(null);
     
     try {
       const csvUrl = convertGoogleSheetsToCSV(sheetUrl);
@@ -89,13 +132,6 @@ const GoogleSheetsUpload = () => {
       const headers = results.meta.fields ? 
         results.meta.fields.map(field => field.trim()) : 
         Object.keys(results.data[0] || {});
-      
-      const previewRows = results.data.slice(0, 6).map(row => {
-        return headers.map(header => {
-          const value = row[header];
-          return value !== undefined && value !== null ? String(value) : '';
-        });
-      });
 
       const newSheet = {
         id: Date.now(),
@@ -111,15 +147,13 @@ const GoogleSheetsUpload = () => {
         data: results.data 
       };
       
+      // Add the new sheet to the list
       setImportedSheets(prev => [...prev, newSheet]);
       
-      setPreviewData({
-        sheetName: newSheet.name,
-        headers: headers,
-        rows: previewRows,
-        totalRows: results.data.length,
-        sheetId: newSheet.id
-      });
+      // Auto-select the newly imported sheet and show its preview
+      setSelectedSheetId(newSheet.id);
+      const preview = createPreviewData(newSheet);
+      setPreviewData(preview);
       
       setSheetUrl('');
       
@@ -153,12 +187,13 @@ const GoogleSheetsUpload = () => {
     if (!sheet) {
       throw new Error('Sheet data not found');
     }
+    
 
     const response = await fetch(`${API_BASE_URL}/api/users/googlesheetUrl` , {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}` 
+        'Authorization': `Bearer ${token}` 
       },
       body: JSON.stringify({
         sheetUrl: sheet.url
@@ -177,7 +212,6 @@ const GoogleSheetsUpload = () => {
       } else {
         setUploadSuccess('Sheet uploaded successfully!');
       }
-      
       
       setImportedSheets(prev => 
         prev.map(s => 
@@ -204,12 +238,10 @@ const GoogleSheetsUpload = () => {
   }
 };
 
-
   const syncSheet = async (sheetId) => {
     const sheet = importedSheets.find(s => s.id === sheetId);
     if (!sheet) return;
     
-  
     setImportedSheets(prev => 
       prev.map(s => 
         s.id === sheetId 
@@ -221,38 +253,24 @@ const GoogleSheetsUpload = () => {
     try {
       const results = await parseCSVFromUrl(sheet.csvUrl);
       
-     setImportedSheets(prev => 
+      const updatedSheet = {
+        ...sheet,
+        status: 'connected', 
+        lastSync: new Date().toISOString(),
+        rows: results.data.length,
+        data: results.data
+      };
+
+      setImportedSheets(prev => 
         prev.map(s => 
-          s.id === sheetId 
-            ? { 
-                ...s, 
-                status: 'connected', 
-                lastSync: new Date().toISOString(),
-                rows: results.data.length,
-                data: results.data
-              }
-            : s
+          s.id === sheetId ? updatedSheet : s
         )
       );
       
-      if (previewData && previewData.sheetId === sheetId) {
-        const headers = results.meta.fields ? 
-          results.meta.fields.map(field => field.trim()) : 
-          Object.keys(results.data[0] || {});
-        
-        const previewRows = results.data.slice(0, 6).map(row => {
-          return headers.map(header => {
-            const value = row[header];
-            return value !== undefined && value !== null ? String(value) : '';
-          });
-        });
-
-        setPreviewData({
-          ...previewData,
-          headers: headers,
-          rows: previewRows,
-          totalRows: results.data.length
-        });
+      // Update preview if this is the selected sheet
+      if (selectedSheetId === sheetId) {
+        const preview = createPreviewData(updatedSheet);
+        setPreviewData(preview);
       }
       
     } catch (error) {
@@ -267,10 +285,26 @@ const GoogleSheetsUpload = () => {
     }
   };
 
+  // Fixed removeSheet function to handle preview properly
   const removeSheet = (sheetId) => {
-    setImportedSheets(prev => prev.filter(s => s.id !== sheetId));
-    if (previewData && previewData.sheetId === sheetId) {
-      setPreviewData(null);
+    const updatedSheets = importedSheets.filter(s => s.id !== sheetId);
+    setImportedSheets(updatedSheets);
+    
+    // If the removed sheet was selected, handle preview properly
+    if (selectedSheetId === sheetId) {
+      if (updatedSheets.length > 0) {
+        // Select the most recent sheet (last in array)
+        const nextSheet = updatedSheets[updatedSheets.length - 1];
+        setSelectedSheetId(nextSheet.id);
+        const preview = createPreviewData(nextSheet);
+        setPreviewData(preview);
+      } else {
+        // No sheets left, clear everything
+        setSelectedSheetId(null);
+        setPreviewData(null);
+        setUploadError('');
+        setUploadSuccess('');
+      }
     }
   };
 
@@ -285,8 +319,12 @@ const GoogleSheetsUpload = () => {
     return `${Math.floor(diffInMinutes / 1440)}d ago`;
   };
 
+  if(!token){
+    route.push('/')
+  }
+
   return (<>
-      {isLoading ? <LoadingAnimation/> : 
+      {!token ? <LoadingAnimation/> : 
     <div className="min-h-screen bg-gray-900 text-white">
     
       <div className="absolute top-32 right-24 w-28 h-28 bg-green-600 rounded-full opacity-20 blur-xl"></div>
@@ -376,8 +414,7 @@ const GoogleSheetsUpload = () => {
               </div>
             </div>
 
-          
-            <div className="bg-gray-800 rounded-xl p-6">
+            <div className="bg-gray-800 rounded-xl p-6 ">
               <h3 className="text-xl font-semibold mb-4">Connected Sheets</h3>
               {importedSheets.length === 0 ? (
                 <div className="text-center py-8">
@@ -385,9 +422,15 @@ const GoogleSheetsUpload = () => {
                   <p className="text-gray-400">No sheets connected yet</p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-4 max-h-[260px] overflow-y-auto py-2 custom_scrollbar px-5">
                   {importedSheets.map((sheet) => (
-                    <div key={sheet.id} className="bg-gray-700 rounded-lg p-4">
+                    <div 
+                      key={sheet.id} 
+                      className={`bg-gray-700 rounded-lg p-4 transition-all cursor-pointer ${
+                        selectedSheetId === sheet.id ? 'ring-2 ring-green-500 bg-gray-700/80' : 'hover:bg-gray-600'
+                      }`}
+                      onClick={() => handleSheetSelection(sheet.id)}
+                    >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center space-x-2 mb-2">
@@ -405,6 +448,9 @@ const GoogleSheetsUpload = () => {
                             }`}>
                               {sheet.status}
                             </span>
+                            {selectedSheetId === sheet.id && (
+                              <Eye className="w-4 h-4 text-green-400" />
+                            )}
                           </div>
                           <p className="text-sm text-gray-400 mb-2">
                             {sheet.rows.toLocaleString()} rows • {sheet.columns} columns
@@ -416,14 +462,20 @@ const GoogleSheetsUpload = () => {
                         
                         <div className="flex items-center space-x-2">
                           <button
-                            onClick={() => syncSheet(sheet.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              syncSheet(sheet.id);
+                            }}
                             disabled={sheet.status === 'syncing'}
                             className="p-2 hover:bg-gray-600 rounded-lg transition-colors disabled:opacity-50"
                           >
                             <RefreshCw className={`w-4 h-4 ${sheet.status === 'syncing' ? 'animate-spin' : ''}`} />
                           </button>
                           <button 
-                            onClick={() => removeSheet(sheet.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeSheet(sheet.id);
+                            }}
                             className="p-2 hover:bg-gray-600 rounded-lg transition-colors text-red-400"
                           >
                             ×
@@ -437,9 +489,16 @@ const GoogleSheetsUpload = () => {
             </div>
           </div>
 
-        
           <div className="bg-gray-800 rounded-xl p-6">
-            <h3 className="text-xl font-semibold mb-4">Live Preview</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold">Live Preview</h3>
+              {importedSheets.length > 1 && (
+                <div className="text-xs text-gray-400">
+                  Click sheet to preview
+                </div>
+              )}
+            </div>
+            
             {previewData ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between text-sm">
@@ -454,7 +513,7 @@ const GoogleSheetsUpload = () => {
                   Showing 5 of {previewData.totalRows.toLocaleString()} rows
                 </div>
                 
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto custom_scrollbar_bottom">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-700">
@@ -523,13 +582,14 @@ const GoogleSheetsUpload = () => {
             ) : (
               <div className="text-center py-12">
                 <ExternalLink className="w-16 h-16 mx-auto mb-4 text-gray-600" />
-                <p className="text-gray-400 text-sm">Import a sheet to see live preview</p>
+                <p className="text-gray-400 text-sm">
+                  {importedSheets.length > 0 ? 'Click on a sheet to preview' : 'Import a sheet to see live preview'}
+                </p>
               </div>
             )}
           </div>
         </div>
 
-      
         <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-gray-800 rounded-xl p-6 text-center">
             <div className="text-3xl font-bold text-green-400 mb-2">

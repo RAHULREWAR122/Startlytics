@@ -1,10 +1,15 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import { User, Mail, Phone, MapPin, Calendar, Briefcase, Edit3, Save, X, LogOut, Building } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useDispatch } from 'react-redux';
+import { removeUser , removeToken } from '@/components/Redux/AuthSlice';
+import { useSelector } from 'react-redux';
+import { loadUserFromLocalStorage , loadTokenFromLocalStorage } from '@/components/Redux/AuthSlice';
 
-export default function UserDetailsPage() {
+export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
-  const [userDetails, setUserDetails] = useState({
+  const [userDetails, setuserDetails] = useState({
     name: '',
     email: '',
     phone: '',
@@ -19,29 +24,44 @@ export default function UserDetailsPage() {
   });
 
   const [tempDetails, setTempDetails] = useState(userDetails);
+  const route = useRouter();
+ 
+  const dispatch = useDispatch();
+  const token = useSelector((state)=>state?.userLocalSlice.token)
+  const user = useSelector((state)=>state?.userLocalSlice.user)
+     
+  // Load Redux data from localStorage on component mount
+  useEffect(()=>{
+    dispatch(loadTokenFromLocalStorage())
+    dispatch(loadUserFromLocalStorage())
+  },[dispatch])
 
+  // Update userDetails when Redux user data changes
   useEffect(() => {
-    try {
-      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-      if (userData) {
-        setUserDetails({
-          name: userData.name || '',
-          email: userData.email || '',
-          phone: userData.phone || '',
-          location: userData.location || '',
-          dateOfBirth: userData.dateOfBirth || '',
-          jobTitle: userData.jobTitle || '',
-          company: userData.company || '',
-          bio: userData.bio || '',
-          website: userData.website || '',
-          linkedin: userData.linkedin || '',
-          startupType: userData.startupType || ''
-        });
-      }
-    } catch (error) {
-      console.error('Error loading user data:', error);
+    if (user && Object.keys(user).length > 0) {
+      const updatedDetails = {
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        location: user.location || '',
+        dateOfBirth: user.dateOfBirth || '',
+        jobTitle: user.jobTitle || '',
+        company: user.company || '',
+        bio: user.bio || '',
+        website: user.website || '',
+        linkedin: user.linkedin || '',
+        startupType: user.startupType || ''
+      };
+      setuserDetails(updatedDetails);
     }
-  }, []);
+  }, [user]); // Add user as dependency
+
+  // Redirect if no token
+  useEffect(() => {
+    if (token === null || token === undefined || token === '') {
+      route.push('/');
+    }
+  }, [token, route]);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -49,15 +69,23 @@ export default function UserDetailsPage() {
   };
 
   const handleSave = () => {
-    setUserDetails(tempDetails);
+    setuserDetails(tempDetails);
     setIsEditing(false);
-    
-    try {
-      const currentUserData = JSON.parse(localStorage.getItem('userData') || '{}');
-      const updatedUserData = { ...currentUserData, ...tempDetails };
-      localStorage.setItem('userData', JSON.stringify(updatedUserData));
-    } catch (error) {
-      console.error('Error saving user data:', error);
+
+    // If you want to update localStorage directly, you can do it here
+    // But it's better to dispatch an action to update Redux store
+    // which should then update localStorage
+    if (typeof window !== 'undefined') {
+      try {
+        const currentUserData = user || {};
+        const updatedUserData = { ...currentUserData, ...tempDetails };
+        localStorage.setItem('userData', JSON.stringify(updatedUserData));
+        
+        // Optionally dispatch an action to update Redux store
+        // dispatch(updateUser(updatedUserData));
+      } catch (error) {
+        console.error('Error saving user data:', error);
+      }
     }
   };
 
@@ -67,10 +95,11 @@ export default function UserDetailsPage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
-    alert("Logout successful");
-      window.location.href = '/';
+    dispatch(removeToken())
+    dispatch(removeUser())
+    setTimeout(()=>{
+      route.push('/')
+    },300)
   };
 
   const handleInputChange = (field, value) => {
@@ -83,6 +112,13 @@ export default function UserDetailsPage() {
   const shouldDisplayField = (value) => {
     return value && value.trim() !== '';
   };
+
+  // Show loading or redirect if no token
+  if (!token) {
+    return <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="text-white">Redirecting...</div>
+    </div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 p-4">

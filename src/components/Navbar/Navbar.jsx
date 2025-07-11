@@ -12,29 +12,38 @@ import { useEffect } from 'react';
 import Register from '../LoginAndRegisterModal/Register';
 import LoginModal from '../LoginAndRegisterModal/Login';
 import Link from 'next/link';
-import { userDetails } from '@/app/UserDetails/loggedInUserDetails';
 import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import { useDispatch } from 'react-redux';
 import { openLoginModal , openRegisterModal } from '../Redux/LoginModal';
+import { userDetails } from '@/app/UserDetails/loggedInUserDetails';
+import { loadUserFromLocalStorage , loadTokenFromLocalStorage } from '../Redux/AuthSlice';
 
 function Navbar() {
     
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [scrollY, setScrollY] = useState(0);
-    const [showLoginModal, setShowLoginModal] = useState(false);
-    const [showRegisterModal, setShowRegisterModal] = useState(false);
-    const route = useRouter()
-    const {user , token} = userDetails();
-    const dispatch = useDispatch();
-    
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
+  // const [user, setUser] = useState(null);
+  // const { user, token } = userDetails();
+  const router = useRouter();
+  const dispatch = useDispatch();
+  
+  const token = useSelector((state)=>state?.userLocalSlice.token)
+  const user = useSelector((state)=>state?.userLocalSlice.user)
+  
+  
+  
+  useEffect(()=>{
+      dispatch(loadTokenFromLocalStorage())
+      dispatch(loadUserFromLocalStorage())
+  },[dispatch])
+
     const loginModal = useSelector((state)=> state?.loginModal?.isLoginModalOpen)
     const registernModal = useSelector((state)=> state?.loginModal?.isRegisterModalOpen)
     
-    useEffect(()=>{
-       userDetails();
-       
-    },[window.location.pathname , isMenuOpen ,token])
+    // useEffect(()=>{
+    //    userDetails();
+    // },[isMenuOpen ,token , window.location.pathname])
 
     useEffect(() => {
         const handleScroll = () => setScrollY(window.scrollY);
@@ -43,8 +52,8 @@ function Navbar() {
       }, []);
       
   return (<>
-       {loginModal && <LoginModal setShowLoginModal={setShowLoginModal} setShowRegisterModal={setShowRegisterModal}/>}
-       {registernModal && <Register setShowLoginModal={setShowLoginModal} setShowRegisterModal={setShowRegisterModal}/>}  
+       {loginModal && <LoginModal />}
+       {registernModal && <Register />}  
 
      <header className={`fixed min-w-[100vw] top-0 z-50 transition-all duration-300 ${scrollY > 50 ? 'bg-gray-900/95 backdrop-blur-md shadow-lg' : 'bg-transparent'}`}>
         <nav className="container mx-auto min-w-[100%] px-6 py-4">
@@ -70,7 +79,7 @@ function Navbar() {
               <Link href="#features" className="text-gray-300 hover:text-white transition-colors duration-300 hover:scale-105">Features</Link>
               <Link href="#pricing" className="text-gray-300 hover:text-white transition-colors duration-300 hover:scale-105">Pricing</Link>
              
-             {user?.name ? <div onClick={()=> route.push('/profile')} className='rounded-[50px] bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 h-10 w-10 text-white flex justify-center items-center'>{user?.name[0]}</div> : 
+             {user?.name ? <div onClick={()=> router.push('/profile')} className='rounded-[50px] bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 h-10 w-10 text-white flex justify-center items-center'>{user?.name[0]}</div> : 
               <button onClick={()=>dispatch(openLoginModal())} className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 px-6 py-2 rounded-full text-white font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg">
                 Get Started
               </button>

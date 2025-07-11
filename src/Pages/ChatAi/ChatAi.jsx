@@ -10,13 +10,21 @@ function ChatAi() {
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef(null)
-
+  const [token , setToken] = useState(null)
+  const [user , setuser] = useState([])
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
- 
-   const token = localStorage.getItem('authToken');
-   const user = JSON.parse(localStorage.getItem('userData'));
+  
+  useEffect(()=>{
+
+    if(typeof window !== 'undefined'){
+    const token = localStorage.getItem('authToken');
+    const user = JSON.parse(localStorage.getItem('userData'));
+    setToken(token)
+    setuser(user)
+   }
+  },[])
    
   useEffect(() => {
     scrollToBottom()
@@ -39,7 +47,7 @@ function ChatAi() {
     setMessages(prev => [...prev, userMessage])
 
     try {
-      const response = await axios.post('https://myprod.onrender.com/api/ai/assistant', {
+      const response = await axios.post('w', {
         question: userMessageText,
         id : user?._id
       }, {

@@ -1,10 +1,9 @@
 import React from 'react'
 import Dashboard from './Dashboard'
-const MainDashboard = ()=> {
+// import Protect from '@/components/Redux/ProtectPages'
+const MainDashboard = ({})=> {
   return (
-    <>
-    <Dashboard/>
-    </>
+         <Dashboard/>
   )
 }
 
