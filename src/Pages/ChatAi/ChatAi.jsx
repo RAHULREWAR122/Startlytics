@@ -1,7 +1,8 @@
 'use client'
 import React, { useState, useRef, useEffect } from 'react'
 import axios from 'axios';
-
+import { useDispatch , useSelector } from 'react-redux';
+import { loadTokenFromLocalStorage , loadUserFromLocalStorage } from '@/components/Redux/AuthSlice';
 function ChatAi() {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState([
@@ -10,21 +11,20 @@ function ChatAi() {
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef(null)
-  const [token , setToken] = useState(null)
-  const [user , setuser] = useState([])
+   const dispatch = useDispatch();
+  const token = useSelector((state)=>state?.userLocalSlice.token)
+  const user = useSelector((state)=>state?.userLocalSlice.user)
+ 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
-  
-  useEffect(()=>{
+      
+   
+     useEffect(()=>{
+          dispatch(loadTokenFromLocalStorage())
+         dispatch(loadUserFromLocalStorage())
+     },[dispatch])
 
-    if(typeof window !== 'undefined'){
-    const token = localStorage.getItem('authToken');
-    const user = JSON.parse(localStorage.getItem('userData'));
-    setToken(token)
-    setuser(user)
-   }
-  },[])
    
   useEffect(() => {
     scrollToBottom()
@@ -47,7 +47,7 @@ function ChatAi() {
     setMessages(prev => [...prev, userMessage])
 
     try {
-      const response = await axios.post('w', {
+      const response = await axios.post('https://myprod.onrender.com/api/ai/assistant', {
         question: userMessageText,
         id : user?._id
       }, {
@@ -69,7 +69,6 @@ function ChatAi() {
     } catch (error) {
       console.error('API Error:', error)
       
-      // Add error message
       const errorMessage = {
         id: Date.now() + 1,
         text: error.response?.status === 429 

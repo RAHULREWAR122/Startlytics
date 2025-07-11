@@ -28,6 +28,7 @@ export default function CSVUploadPage() {
     const user = useSelector((state)=>state?.userLocalSlice.user)
     
       
+
     useEffect(()=>{
         dispatch(loadTokenFromLocalStorage())
         dispatch(loadUserFromLocalStorage())
@@ -43,15 +44,10 @@ export default function CSVUploadPage() {
  
 
  const getAuthHeaders = () => {
-  if (typeof window !== 'undefined') {
     return {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     };
-  }
-  return {
-    'Content-Type': 'application/json'
-  };
 };
 
 
