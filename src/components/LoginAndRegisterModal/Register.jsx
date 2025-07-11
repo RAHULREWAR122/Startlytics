@@ -166,13 +166,13 @@ const Register = ({ }) => {
 
   return (
     <>
-      {toast && (
+      {/* {toast && (
         <Toast 
           message={toast.message} 
           type={toast.type} 
           onClose={closeToast} 
         />
-      )}
+      )} */}
       
       <div onClick={()=>dispatch(closeRegisterModal())} className="fixed inset-0 backdrop-blur-sm bg-black/20 bg-opacity-50 flex items-center justify-center z-100 p-4">
         <div onClick={(e)=> e.stopPropagation()} className="bg-gray-800 mt-14 rounded-2xl py-4 px-8 w-full max-w-md relative max-h-[90vh] overflow-y-auto">

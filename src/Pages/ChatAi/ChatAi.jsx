@@ -53,7 +53,7 @@ function ChatAi() {
       }, {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          // 'Authorization': `Bearer ${token}`,
         },
         timeout: 30000, 
       })
