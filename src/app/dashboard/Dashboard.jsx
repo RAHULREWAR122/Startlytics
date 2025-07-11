@@ -33,7 +33,7 @@ const Dashboard = () => {
   const [showSheet, setShowSheet] = useState(false);
   
   const router = useRouter();
-  const isLoading = useAuth();
+  const isLoading = false;
 
   const colorPalettes = {
     primary: ['#8B5CF6', '#EC4899', '#10B981', '#F59E0B', '#EF4444', '#06B6D4'],
