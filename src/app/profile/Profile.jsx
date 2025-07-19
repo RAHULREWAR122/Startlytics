@@ -6,6 +6,7 @@ import { useDispatch } from 'react-redux';
 import { removeUser , removeToken } from '@/components/Redux/AuthSlice';
 import { useSelector } from 'react-redux';
 import { loadUserFromLocalStorage , loadTokenFromLocalStorage } from '@/components/Redux/AuthSlice';
+import { useThemeColor } from '@/hooks/themeColors';
 
 export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
@@ -25,11 +26,12 @@ export default function ProfilePage() {
 
   const [tempDetails, setTempDetails] = useState(userDetails);
   const route = useRouter();
- 
+  
   const dispatch = useDispatch();
   const token = useSelector((state)=>state?.userLocalSlice.token)
   const user = useSelector((state)=>state?.userLocalSlice.user)
-     
+  const {background , text } = useThemeColor();   
+  
   // Load Redux data from localStorage on component mount
   useEffect(()=>{
     dispatch(loadTokenFromLocalStorage())
@@ -54,11 +56,11 @@ export default function ProfilePage() {
       };
       setuserDetails(updatedDetails);
     }
-  }, [user]); // Add user as dependency
+  }, [user]);
 
   // Redirect if no token
   useEffect(() => {
-    if (token === null || token === undefined || token === '') {
+    if (token === null || token === undefined || token === '' || !user?.email) {
       route.push('/');
     }
   }, [token, route]);
@@ -72,17 +74,11 @@ export default function ProfilePage() {
     setuserDetails(tempDetails);
     setIsEditing(false);
 
-    // If you want to update localStorage directly, you can do it here
-    // But it's better to dispatch an action to update Redux store
-    // which should then update localStorage
     if (typeof window !== 'undefined') {
       try {
         const currentUserData = user || {};
         const updatedUserData = { ...currentUserData, ...tempDetails };
         localStorage.setItem('userData', JSON.stringify(updatedUserData));
-        
-        // Optionally dispatch an action to update Redux store
-        // dispatch(updateUser(updatedUserData));
       } catch (error) {
         console.error('Error saving user data:', error);
       }
@@ -115,47 +111,53 @@ export default function ProfilePage() {
 
   // Show loading or redirect if no token
   if (!token) {
-    return <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+    return <div style={{background : background.primary , color : text.primary}} className="min-h-screen flex items-center justify-center">
       <div className="text-white">Redirecting...</div>
     </div>;
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 p-4">
-      <br />
-      <br />
-      <br />
-      <br />
+    <div style={{background : background.primary}} className="min-h-screen p-2 sm:p-4 lg:p-6">
+      {/* Spacing for fixed navbar */}
+      <div className="h-16 sm:h-20 lg:h-24"></div>
 
-      <div className="max-w-6xl mx-auto">
-        <div className="bg-white/5 backdrop-blur-md rounded-2xl p-8 border border-white/10 shadow-2xl">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center space-x-6">
-              <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
-                <User className="w-10 h-10 text-white" />
+      <div className="max-w-7xl mx-auto">
+        <div className="bg-white/5 backdrop-blur-md rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 border border-white/10 shadow-2xl">
+          
+          {/* Header Section */}
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6 mb-6 lg:mb-8">
+            
+            {/* User Info Section */}
+            <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-4 lg:space-x-6">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+                <User className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
               </div>
-              <div>
-                <h2 className="text-white text-3xl font-bold">
+              
+              <div className="text-center sm:text-left flex-1 min-w-0">
+                <h2 style={{color : text.secondary}} className="text-xl sm:text-2xl lg:text-3xl font-bold break-words">
                   {isEditing ? (
                     <input
                       type="text"
                       value={tempDetails.name}
+                      style={{color : text.secondary}}
                       onChange={(e) => handleInputChange('name', e.target.value)}
-                      className="bg-white/10 border border-purple-500/30 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full bg-white/10 border border-purple-500/30 rounded-lg px-3 py-2 text-sm sm:text-base lg:text-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Full Name"
                     />
                   ) : (
                     userDetails.name || 'User'
                   )}
                 </h2>
+                
                 {(shouldDisplayField(userDetails.jobTitle) || isEditing) && (
-                  <p className="text-purple-300 text-lg mt-2">
+                  <p className="text-purple-300 text-sm sm:text-base lg:text-lg mt-2">
                     {isEditing ? (
                       <input
                         type="text"
+                        style={{color : text.secondary}}
                         value={tempDetails.jobTitle}
                         onChange={(e) => handleInputChange('jobTitle', e.target.value)}
-                        className="bg-white/10 border border-purple-500/30 rounded-lg px-3 py-1 text-purple-300 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full bg-white/10 border border-purple-500/30 rounded-lg px-3 py-1 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Job Title"
                       />
                     ) : (
@@ -163,26 +165,29 @@ export default function ProfilePage() {
                     )}
                   </p>
                 )}
+                
                 {shouldDisplayField(userDetails.startupType) && (
-                  <span className="inline-block mt-2 px-3 py-1 bg-gradient-to-r from-blue-500/20 to-purple-600/20 text-blue-300 text-sm rounded-full border border-blue-500/30">
+                  <span style={{color : text.secondary}} className="inline-block mt-2 px-2 py-1 sm:px-3 bg-gradient-to-r from-blue-500/20 to-purple-600/20 text-blue-300 text-xs sm:text-sm rounded-full border border-blue-500/30">
                     {userDetails.startupType}
                   </span>
                 )}
               </div>
             </div>
             
-            <div className="flex space-x-2">
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
               <button
                 onClick={handleLogout}
-                className="flex items-center space-x-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 rounded-lg transition-colors border border-red-500/30"
+                className="flex items-center justify-center space-x-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 px-3 py-2 sm:px-4 text-sm rounded-lg transition-colors border border-red-500/30 w-full sm:w-auto"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Logout</span>
               </button>
+              
               {!isEditing ? (
                 <button
                   onClick={handleEdit}
-                  className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-3 rounded-lg transition-all transform hover:scale-105 shadow-lg"
+                  className="flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-4 py-2 sm:px-6 sm:py-3 text-sm rounded-lg transition-all transform hover:scale-105 shadow-lg w-full sm:w-auto"
                 >
                   <Edit3 className="w-4 h-4" />
                   <span>Edit Profile</span>
@@ -191,14 +196,14 @@ export default function ProfilePage() {
                 <>
                   <button
                     onClick={handleSave}
-                    className="flex items-center space-x-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 px-4 py-2 rounded-lg transition-colors border border-green-500/30"
+                    className="flex items-center justify-center space-x-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 px-3 py-2 sm:px-4 text-sm rounded-lg transition-colors border border-green-500/30 w-full sm:w-auto"
                   >
                     <Save className="w-4 h-4" />
                     <span>Save</span>
                   </button>
                   <button
                     onClick={handleCancel}
-                    className="flex items-center space-x-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 rounded-lg transition-colors border border-red-500/30"
+                    className="flex items-center justify-center space-x-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 px-3 py-2 sm:px-4 text-sm rounded-lg transition-colors border border-red-500/30 w-full sm:w-auto"
                   >
                     <X className="w-4 h-4" />
                     <span>Cancel</span>
@@ -208,9 +213,12 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Form Fields Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            
+            {/* Email Field */}
             <div className="space-y-2">
-              <label className="flex items-center space-x-2 text-purple-300 font-medium">
+              <label className="flex items-center space-x-2 text-purple-300 font-medium text-sm sm:text-base">
                 <Mail className="w-4 h-4" />
                 <span>Email</span>
               </label>
@@ -218,20 +226,22 @@ export default function ProfilePage() {
                 <input
                   type="email"
                   value={tempDetails.email}
+                  style={{color : text.secondary}}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="w-full bg-white/10 border border-purple-500/30 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full bg-white/10 border border-purple-500/30 rounded-lg px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Email address"
                 />
               ) : (
-                <p className="text-white bg-white/5 rounded-lg px-4 py-3 border border-white/10">
+                <p style={{color : text.secondary}} className="bg-white/5 rounded-lg px-3 py-2 sm:px-4 sm:py-3 border border-white/10 text-sm sm:text-base break-all">
                   {userDetails.email}
                 </p>
               )}
             </div>
 
-           {(shouldDisplayField(userDetails.phone) || isEditing) && (
+            {/* Phone Field */}
+            {(shouldDisplayField(userDetails.phone) || isEditing) && (
               <div className="space-y-2">
-                <label className="flex items-center space-x-2 text-purple-300 font-medium">
+                <label className="flex items-center space-x-2 text-purple-300 font-medium text-sm sm:text-base">
                   <Phone className="w-4 h-4" />
                   <span>Phone</span>
                 </label>
@@ -239,43 +249,47 @@ export default function ProfilePage() {
                   <input
                     type="tel"
                     value={tempDetails.phone}
+                    style={{color : text.secondary}}
                     onChange={(e) => handleInputChange('phone', e.target.value)}
-                    className="w-full bg-white/10 border border-purple-500/30 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full bg-white/10 border border-purple-500/30 rounded-lg px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Phone number"
                   />
                 ) : (
-                  <p className="text-white bg-white/5 rounded-lg px-4 py-3 border border-white/10">
+                  <p style={{color : text.secondary}} className="bg-white/5 rounded-lg px-3 py-2 sm:px-4 sm:py-3 border border-white/10 text-sm sm:text-base">
                     {userDetails.phone}
                   </p>
                 )}
               </div>
             )}
 
+            {/* Location Field */}
             {(shouldDisplayField(userDetails.location) || isEditing) && (
               <div className="space-y-2">
-                <label className="flex items-center space-x-2 text-purple-300 font-medium">
+                <label className="flex items-center space-x-2 text-purple-300 font-medium text-sm sm:text-base">
                   <MapPin className="w-4 h-4" />
                   <span>Location</span>
                 </label>
                 {isEditing ? (
                   <input
                     type="text"
+                    style={{color : text.secondary}}
                     value={tempDetails.location}
                     onChange={(e) => handleInputChange('location', e.target.value)}
-                    className="w-full bg-white/10 border border-purple-500/30 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full bg-white/10 border border-purple-500/30 rounded-lg px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Location"
                   />
                 ) : (
-                  <p className="text-white bg-white/5 rounded-lg px-4 py-3 border border-white/10">
+                  <p style={{color : text.secondary}} className="bg-white/5 rounded-lg px-3 py-2 sm:px-4 sm:py-3 border border-white/10 text-sm sm:text-base">
                     {userDetails.location}
                   </p>
                 )}
               </div>
             )}
 
+            {/* Date of Birth Field */}
             {(shouldDisplayField(userDetails.dateOfBirth) || isEditing) && (
               <div className="space-y-2">
-                <label className="flex items-center space-x-2 text-purple-300 font-medium">
+                <label className="flex items-center space-x-2 text-purple-300 font-medium text-sm sm:text-base">
                   <Calendar className="w-4 h-4" />
                   <span>Date of Birth</span>
                 </label>
@@ -283,20 +297,22 @@ export default function ProfilePage() {
                   <input
                     type="date"
                     value={tempDetails.dateOfBirth}
+                    style={{color : text.secondary}}
                     onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
-                    className="w-full bg-white/10 border border-purple-500/30 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full bg-white/10 border border-purple-500/30 rounded-lg px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 ) : (
-                  <p className="text-white bg-white/5 rounded-lg px-4 py-3 border border-white/10">
+                  <p style={{color : text.secondary}} className="bg-white/5 rounded-lg px-3 py-2 sm:px-4 sm:py-3 border border-white/10 text-sm sm:text-base">
                     {new Date(userDetails.dateOfBirth).toLocaleDateString()}
                   </p>
                 )}
               </div>
             )}
 
+            {/* Company Field */}
             {(shouldDisplayField(userDetails.company) || isEditing) && (
               <div className="space-y-2">
-                <label className="flex items-center space-x-2 text-purple-300 font-medium">
+                <label className="flex items-center space-x-2 text-purple-300 font-medium text-sm sm:text-base">
                   <Building className="w-4 h-4" />
                   <span>Company</span>
                 </label>
@@ -304,34 +320,43 @@ export default function ProfilePage() {
                   <input
                     type="text"
                     value={tempDetails.company}
+                    style={{color : text.secondary}}
                     onChange={(e) => handleInputChange('company', e.target.value)}
-                    className="w-full bg-white/10 border border-purple-500/30 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full bg-white/10 border border-purple-500/30 rounded-lg px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Company name"
                   />
                 ) : (
-                  <p className="text-white bg-white/5 rounded-lg px-4 py-3 border border-white/10">
+                  <p style={{color : text.secondary}} className="bg-white/5 rounded-lg px-3 py-2 sm:px-4 sm:py-3 border border-white/10 text-sm sm:text-base">
                     {userDetails.company}
                   </p>
                 )}
               </div>
             )}
 
+            {/* Website Field */}
             {(shouldDisplayField(userDetails.website) || isEditing) && (
               <div className="space-y-2">
-                <label className="flex items-center space-x-2 text-purple-300 font-medium">
+                <label className="flex items-center space-x-2 text-purple-300 font-medium text-sm sm:text-base">
                   <span>Website</span>
                 </label>
                 {isEditing ? (
                   <input
                     type="url"
                     value={tempDetails.website}
+                    style={{color : text.secondary}}
                     onChange={(e) => handleInputChange('website', e.target.value)}
-                    className="w-full bg-white/10 border border-purple-500/30 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full bg-white/10 border border-purple-500/30 rounded-lg px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Website URL"
                   />
                 ) : (
-                  <p className="text-white bg-white/5 rounded-lg px-4 py-3 border border-white/10">
-                    <a href={userDetails.website} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors">
+                  <p className="bg-white/5 rounded-lg px-3 py-2 sm:px-4 sm:py-3 border border-white/10 text-sm sm:text-base">
+                    <a 
+                      style={{color : text.secondary}} 
+                      href={userDetails.website} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-blue-400 hover:text-blue-300 transition-colors break-all"
+                    >
                       {userDetails.website}
                     </a>
                   </p>
@@ -340,19 +365,21 @@ export default function ProfilePage() {
             )}
           </div>
 
+          {/* Bio Field - Full Width */}
           {(shouldDisplayField(userDetails.bio) || isEditing) && (
-            <div className="mt-6 space-y-2">
-              <label className="text-purple-300 font-medium">Bio</label>
+            <div className="mt-4 sm:mt-6 space-y-2">
+              <label className="text-purple-300 font-medium text-sm sm:text-base">Bio</label>
               {isEditing ? (
                 <textarea
                   value={tempDetails.bio}
+                  style={{color : text.secondary}}
                   onChange={(e) => handleInputChange('bio', e.target.value)}
                   rows={4}
-                  className="w-full bg-white/10 border border-purple-500/30 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  className="w-full bg-white/10 border border-purple-500/30 rounded-lg px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                   placeholder="Tell us about yourself..."
                 />
               ) : (
-                <p className="text-white bg-white/5 rounded-lg px-4 py-3 border border-white/10">
+                <p style={{color : text.secondary}} className="bg-white/5 rounded-lg px-3 py-2 sm:px-4 sm:py-3 border border-white/10 text-sm sm:text-base leading-relaxed">
                   {userDetails.bio}
                 </p>
               )}

@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react';
 import axios from 'axios';
-
+import { BASE_URL } from '@/apiLinks';
 export default function FileUploader({ uploadUrl }) {
   const [file, setFile] = useState(null);
   const [status, setStatus] = useState('');

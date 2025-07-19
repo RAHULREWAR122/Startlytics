@@ -5,7 +5,8 @@ import { X, Play, TrendingUp, Eye, EyeOff, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { closeLoginModal , openRegisterModal , openLoginModal , closeRegisterModal } from '../Redux/LoginModal';
 import { useDispatch , useSelector } from 'react-redux';
-
+import { useThemeColor } from '@/hooks/themeColors';
+import { BASE_URL } from '@/apiLinks';
 
 const Toast = ({ message, type, onClose }) => {
   React.useEffect(() => {
@@ -45,6 +46,7 @@ const Register = ({ }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [toast, setToast] = useState(null);
+  const {background , text} = useThemeColor();
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -95,7 +97,7 @@ const Register = ({ }) => {
     setErrors({});
 
     try {
-      const response = await axios.post('https://myprod.onrender.com/api/auth/register', {
+      const response = await axios.post(`${BASE_URL}/api/auth/register`, {
         name: registerForm.name.trim(),
         email: registerForm.email.trim().toLowerCase(),
         password: registerForm.password,
@@ -166,33 +168,25 @@ const Register = ({ }) => {
 
   return (
     <>
-      {/* {toast && (
-        <Toast 
-          message={toast.message} 
-          type={toast.type} 
-          onClose={closeToast} 
-        />
-      )} */}
-      
-      <div onClick={()=>dispatch(closeRegisterModal())} className="fixed inset-0 backdrop-blur-sm bg-black/20 bg-opacity-50 flex items-center justify-center z-100 p-4">
-        <div onClick={(e)=> e.stopPropagation()} className="bg-gray-800 mt-14 rounded-2xl py-4 px-8 w-full max-w-md relative max-h-[90vh] overflow-y-auto">
+      <div onClick={()=>dispatch(closeRegisterModal())} className="fixed inset-0 backdrop-blur-sm bg-black/40 bg-opacity-50 flex items-center justify-center z-100 p-4">
+        <div style={{background : background.primary}}  onClick={(e)=> e.stopPropagation()} className=" mt-4 rounded-2xl py-4 px-8 w-full max-w-md relative max-h-[90vh] overflow-y-auto">
           <button
             onClick={() => dispatch(closeRegisterModal())}
-            className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+            className="absolute top-4 right-4 cursor-pointer text-gray-400 hover:text-white transition-colors"
             disabled={isLoading}
           >
             <X className="w-6 h-6" />
           </button>
 
           <div className="text-center mb-6">
-            <h2 className="text-3xl font-bold text-white ">Get Started</h2>
+            <h2 style={{color : text.secondary}} className="text-3xl font-bold text-white ">Get Started</h2>
           </div>
 
-          <form onSubmit={handleRegisterSubmit} className="space-y-3">
+          <form  onSubmit={handleRegisterSubmit} className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-white ">
                 <div className='flex justify-between items-center'>
-                <span>Full Name <span className="text-red-500">*</span></span>
+                <span style={{color : text.secondary}}>Full Name <span className="text-red-500">*</span></span>
                 {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
                 </div>
 
@@ -201,6 +195,7 @@ const Register = ({ }) => {
                 type="text"
                 value={registerForm.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
+                style={{background : background.secondary , color : text.secondary}}
                 className={`text-white w-full px-4 py-3 bg-gray-700 border rounded-lg focus:outline-none transition-colors ${
                   errors.name ? 'border-red-500 focus:border-red-500' : 'border-gray-600 focus:border-blue-500'
                 }`}
@@ -213,7 +208,7 @@ const Register = ({ }) => {
             <div>
               <label className="block text-sm font-medium text-white ">
                 <div className='flex justify-between items-center'>
-                <span>
+                <span style={{color : text.secondary}}>
                   Email <span className="text-red-500">*</span>
                 </span>
                  {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
@@ -222,6 +217,7 @@ const Register = ({ }) => {
               <input
                 type="email"
                 value={registerForm.email}
+                style={{color : text.secondary , background : background.secondary}}
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 className={`w-full text-white px-4 py-3 bg-gray-700 border rounded-lg focus:outline-none transition-colors ${
                   errors.email ? 'border-red-500 focus:border-red-500' : 'border-gray-600 focus:border-blue-500'
@@ -235,7 +231,7 @@ const Register = ({ }) => {
             <div>
               <label className="block text-sm font-medium text-white ">
                 <div className='flex justify-between items-center'>
-                <span>
+                <span style={{color : text.secondary}}>
                  Password <span className="text-red-500">*</span>
                 </span>
                  {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
@@ -246,6 +242,7 @@ const Register = ({ }) => {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={registerForm.password}
+                  style={{color : text.secondary , background : background.secondary}}
                   onChange={(e) => handleInputChange('password', e.target.value)}
                   className={`w-full text-white px-4 py-3 bg-gray-700 border rounded-lg focus:outline-none transition-colors pr-12 ${
                     errors.password ? 'border-red-500 focus:border-red-500' : 'border-gray-600 focus:border-blue-500'
@@ -256,10 +253,10 @@ const Register = ({ }) => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  className="absolute right-3 cursor-pointer top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
                   disabled={isLoading}
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? <EyeOff className="w-5 h-5" color={text.secondary} /> : <Eye color={text.secondary} className="w-5 h-5" />}
                 </button>
               </div>
              
@@ -268,7 +265,7 @@ const Register = ({ }) => {
             <div>
               <label className="block text-sm font-medium text-white ">
                <div className="flex justify-between items-center">
-                <span>
+                <span style={{color : text.secondary}}>
                  Startup Type <span className="text-red-500">*</span>
                 </span>
                   {errors.startupType && <p className="text-red-500 text-sm mt-1">{errors.startupType}</p>}
@@ -276,6 +273,7 @@ const Register = ({ }) => {
               </label>
               <select
                 value={registerForm.startupType}
+                style={{color : text.secondary ,background : background.secondary}}
                 onChange={(e) => handleInputChange('startupType', e.target.value)}
                 className={`w-full text-white px-4 py-3 bg-gray-700 border rounded-lg focus:outline-none transition-colors ${
                   errors.startupType ? 'border-red-500 focus:border-red-500' : 'border-gray-600 focus:border-blue-500'
@@ -297,7 +295,7 @@ const Register = ({ }) => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full text-white bg-gradient-to-r from-blue-600 to-purple-600 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
+              className="w-full text-white cursor-pointer bg-gradient-to-r from-blue-600 to-purple-600 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
             >
               {isLoading ? (
                 <>
@@ -311,11 +309,11 @@ const Register = ({ }) => {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-gray-400">
+            <p style={{color : text.secondary}} className="text-gray-400">
               Already have an account?{' '}
               <button
                 onClick={()=>dispatch(openLoginModal())}
-                className="text-blue-400 hover:text-blue-300 font-semibold transition-colors"
+                className="text-blue-400 hover:text-blue-300 font-semibold cursor-pointer mb-4 transition-colors"
                 disabled={isLoading}
               >
                 Sign in

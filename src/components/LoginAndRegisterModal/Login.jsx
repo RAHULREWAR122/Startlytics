@@ -3,9 +3,12 @@ import React from 'react'
 import { useState, useEffect } from 'react'
 import { X, Eye, EyeOff, Loader2, Mail, Lock, Chrome, User } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
-import { closeLoginModal , openRegisterModal , closeRegisterModal } from '../Redux/LoginModal';
+import { closeLoginModal , openRegisterModal , closeRegisterModal , openForgotModal } from '../Redux/LoginModal';
 import { useDispatch , useSelector } from 'react-redux';
 import { saveUserToLocalStorage , saveTokenToLocalStorage } from '../Redux/AuthSlice';
+import ForgotPasswordModal from '../Hero/ForgotPassword';
+import { useThemeColor } from '@/hooks/themeColors';
+import { BASE_URL } from '@/apiLinks';
 
 const LoginModal = ({}) => {
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
@@ -16,6 +19,8 @@ const LoginModal = ({}) => {
   const [toast, setToast] = useState(null);
   const [rememberMe, setRememberMe] = useState(false);
   const dispatch = useDispatch();
+  
+  const {background , text} = useThemeColor();
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -58,7 +63,7 @@ const LoginModal = ({}) => {
     setErrors({});
 
     try {
-      const response = await fetch('https://myprod.onrender.com/api/auth/login', {
+      const response = await fetch(`${BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -152,6 +157,8 @@ const LoginModal = ({}) => {
     dispatch(openRegisterModal())
   };
 
+  
+
   const handleInputChange = (field, value) => {
     setLoginForm({ ...loginForm, [field]: value });
     if (errors[field]) {
@@ -160,31 +167,34 @@ const LoginModal = ({}) => {
   };
 
   const handleForgotPassword = () => {
-    showToast('Password reset link sent to your email!', 'success');
+     dispatch(closeLoginModal());
+     dispatch(openForgotModal());
   };
-
+  
+  
   return (
     <>
-      <div onClick={()=>dispatch(closeLoginModal())}  className="fixed inset-0 backdrop-blur-sm bg-black/40 bg-opacity-50 flex items-center justify-center z-100 p-4">
-        <div onClick={(e)=>e.stopPropagation()} className="bg-gray-800 rounded-2xl px-8 py-4 w-full max-w-md relative max-h-[85vh] mt-10  overflow-y-auto border border-gray-700 shadow-2xl">
+     
+      <div onClick={()=>dispatch(closeLoginModal())} className="fixed inset-0 backdrop-blur-sm bg-black/40 bg-opacity-50 flex items-center justify-center z-100 p-4">
+        <div onClick={(e)=>e.stopPropagation()} style={{background : background.primary}} className="bg-gray-800 rounded-2xl px-8 py-4 w-full max-w-md relative max-h-[85vh] mt-10  overflow-y-auto border border-gray-700 shadow-2xl">
           <button
             onClick={() => dispatch(closeLoginModal())}
-            className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+            className="absolute top-4 cursor-pointer right-4 text-gray-400 hover:text-white transition-colors"
             disabled={isLoading || isGoogleLoading}
           >
             <X className="w-6 h-6" />
           </button>
 
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-white mb-2">Welcome Back</h2>
-            <p className="text-gray-400">Sign in to your Startlytics account</p>
+            <h2 style={{color : text.secondary}} className="text-3xl font-bold text-white mb-2">Welcome Back</h2>
+            <p style={{color : text.muted}} className="text-gray-400">Sign in to your Startlytics account</p>
           </div>
 
           <form onSubmit={handleLoginSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-white mb-2">
                 <div className='flex justify-between items-center'>
-                <span>
+                <span style={{color : text.secondary}}>
                    Email <span className="text-red-500">*</span>
                   </span>
                    {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
@@ -198,6 +208,7 @@ const LoginModal = ({}) => {
                   type="email"
                   value={loginForm.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
+                  style={{color : text.secondary , background : background.secondary}}
                   className={`w-full pl-10 pr-4 py-3 bg-gray-700 border rounded-lg focus:outline-none transition-colors text-white placeholder-gray-400 ${
                     errors.email ? 'border-red-500 focus:border-red-500' : 'border-gray-600 focus:border-blue-500'
                   }`}
@@ -211,7 +222,7 @@ const LoginModal = ({}) => {
             <div>
               <label className="block text-sm font-medium text-white mb-2">
                <div className='flex justify-between items-center'>
-              <span>
+              <span style={{color : text.secondary}}> 
                   Password <span className="text-red-500">*</span>
                 </span>
                {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
@@ -224,6 +235,7 @@ const LoginModal = ({}) => {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={loginForm.password}
+                  style={{color : text.secondary , background : background.secondary}}
                   onChange={(e) => handleInputChange('password', e.target.value)}
                   className={`w-full pl-10 pr-12 py-3 bg-gray-700 border rounded-lg focus:outline-none transition-colors text-white placeholder-gray-400 ${
                     errors.password ? 'border-red-500 focus:border-red-500' : 'border-gray-600 focus:border-blue-500'
@@ -234,7 +246,7 @@ const LoginModal = ({}) => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  className="absolute right-3 cursor-pointer top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
                   disabled={isLoading || isGoogleLoading}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -243,34 +255,21 @@ const LoginModal = ({}) => {
               
             </div>
 
-            {/* <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
-                  disabled={isLoading || isGoogleLoading}
-                />
-                <label htmlFor="remember-me" className="ml-2 text-sm text-gray-400">
-                  Remember me
-                </label>
-              </div>
+            <div className="flex items-center justify-end">
               <button
                 type="button"
                 onClick={handleForgotPassword}
-                className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                className="text-sm text-blue-400 cursor-pointer hover:text-blue-600 transition-colors"
                 disabled={isLoading || isGoogleLoading}
               >
                 Forgot password?
               </button>
-            </div> */}
+            </div>
 
             <button
               type="submit"
               disabled={isLoading || isGoogleLoading}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
+              className="w-full cursor-pointer bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
             >
               {isLoading ? (
                 <>
@@ -313,11 +312,11 @@ const LoginModal = ({}) => {
           </div> */}
 
           <div className="mt-6 text-center">
-            <p className="text-gray-400">
+            <p style={{color : text.secondary }} className="text-gray-400">
               Don't have an account?{' '}
               <button
                 onClick={switchToRegister}
-                className="text-blue-400 hover:text-blue-300 font-semibold transition-colors"
+                className="text-blue-400 cursor-pointer hover:text-blue-500 mb-3 font-semibold transition-colors"
                 disabled={isLoading || isGoogleLoading}
               >
                 Sign up

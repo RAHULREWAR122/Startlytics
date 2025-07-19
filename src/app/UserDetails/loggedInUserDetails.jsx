@@ -2,7 +2,7 @@
 // https://myprod.onrender.com/api/auth/user/details
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-
+import { BASE_URL } from '@/apiLinks';
 const loggedInUserDetails = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -53,7 +53,7 @@ const loggedInUserDetails = () => {
         return null;
       }
 
-      const response = await axios.post('https://myprod.onrender.com/api/auth/user/details', {
+      const response = await axios.post(`${BASE_URL}/api/auth/user/details`, {
         userId: userId
       }, {
         headers: {

@@ -9,7 +9,8 @@ import LoadingAnimation from '../Animation/LoadingAnimation';
 import { userDetails } from '../UserDetails/loggedInUserDetails';
 import { useSelector , useDispatch } from 'react-redux';
 import { loadUserFromLocalStorage , loadTokenFromLocalStorage } from '@/components/Redux/AuthSlice';
-
+import { useThemeColor } from '@/hooks/themeColors';
+import { BASE_URL } from '@/apiLinks';
 export default function CSVUploadPage() {
   const [dragActive, setDragActive] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
@@ -19,23 +20,19 @@ export default function CSVUploadPage() {
   const [error, setError] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [processingToServer, setProcessingToServer] = useState(false);
+  const {background , text} = useThemeColor();
   
-
   const route = useRouter();
-  
     const dispatch = useDispatch();
     const token = useSelector((state)=>state?.userLocalSlice.token)
     const user = useSelector((state)=>state?.userLocalSlice.user)
     
       
-
+    
     useEffect(()=>{
         dispatch(loadTokenFromLocalStorage())
         dispatch(loadUserFromLocalStorage())
     },[dispatch])
-
-
-  const API_BASE_URL = 'https://myprod.onrender.com';
   
   const getAuthToken = () => {
     return token;
@@ -49,9 +46,6 @@ export default function CSVUploadPage() {
       'Content-Type': 'application/json'
     };
 };
-
-
-  
 
   const handleDrag = useCallback((e) => {
     e.preventDefault();
@@ -174,6 +168,7 @@ export default function CSVUploadPage() {
       setPreviewData(null);
     }
   };
+  
 
   const previewFile = (file) => {
     if (file.parsedData) {
@@ -252,7 +247,7 @@ export default function CSVUploadPage() {
         console.log(key, value);
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/users/upload`, {
+      const response = await fetch(`${BASE_URL}/api/users/upload`, {
         method: 'POST',
         headers: {'Authorization': `Bearer ${token}`},
         body: formData
@@ -283,7 +278,7 @@ export default function CSVUploadPage() {
       ));
 
       setError(null);
-      route.push('/dashboard')
+      // route.push('/dashboard')
       
     } catch (error) {
       console.error('Error uploading to server:', error);
@@ -321,7 +316,7 @@ export default function CSVUploadPage() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`${API_BASE_URL}/api/files/${file.serverId}/save`, {
+      const response = await fetch(`${BASE_URL}/api/files/${file.serverId}/save`, {
         method: 'POST',
         headers: getAuthHeaders(),
       });
@@ -345,13 +340,16 @@ export default function CSVUploadPage() {
     }
   };
    
-     if(!token){
+  useEffect(()=>{
+   if(!token || !user?.email){
        route.push('/')
      }
  
+  },[token , user , dispatch])
+    
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white custom_scrollbar hide-scrollbar overflow-hidden">
+    <div style={{background : background.secondary}} className="min-h-screen bg-gray-900 text-white custom_scrollbar hide-scrollbar overflow-hidden">
       {!token ? <LoadingAnimation/> : 
      <>  
       <div className="absolute top-20 left-20 w-32 h-32 bg-blue-600 rounded-full opacity-20 blur-xl"></div>
@@ -365,12 +363,11 @@ export default function CSVUploadPage() {
               CSV Upload & Processing
             </span>
           </h1>
-          <p className="text-gray-300 text-lg">
+          <p style={{color : text.secondary}} className="text-gray-300 text-lg">
             Upload, preview and process your CSV files locally, then optionally send to server
           </p>
         </div>
 
-        {/* Error Message */}
         {error && (
           <div className="mb-6 bg-red-900/50 border border-red-500 rounded-xl p-4 flex items-center space-x-3">
             <AlertCircle className="w-5 h-5 text-red-400" />
@@ -384,12 +381,12 @@ export default function CSVUploadPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 ">
+        <div  className="grid  grid-cols-1 lg:grid-cols-2 gap-8 ">
           {/* Upload Section */}
           <div className="space-y-6">
             {/* Drag & Drop Area */}
             <div
-              className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-200 ${
+              className={`border-2 border-dashed shadow-2xl rounded-2xl p-8 text-center transition-all duration-200 ${
                 dragActive 
                   ? 'border-blue-500 bg-blue-500/10' 
                   : 'border-gray-600 hover:border-gray-500'
@@ -400,8 +397,8 @@ export default function CSVUploadPage() {
               onDrop={handleDrop}
             >
               <Upload className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-              <h3 className="text-xl font-semibold mb-2">Drop CSV files here</h3>
-              <p className="text-gray-400 mb-4">Files will be processed locally first</p>
+              <h3 style={{color : text.primary}} className="text-xl font-semibold mb-2">Drop CSV files here</h3>
+              <p style={{color : text.secondary}} className="text-gray-400 mb-4">Files will be processed locally first</p>
               <input
                 type="file"
                 accept=".csv"
@@ -422,24 +419,24 @@ export default function CSVUploadPage() {
               </label>
             </div>
 
-            {/* Processing Progress */}
+            
             {(loading || processingToServer) && (
-              <div className="bg-gray-800 rounded-xl p-6">
+              <div style={{background : background.secondary}}  className="bg-gray-800 shadow-xl rounded-xl p-6">
                 <div className="flex items-center space-x-3 mb-4">
                   <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-                  <span>
+                  <span style={{color : text.primary}}>
                     {loading ? 'Parsing CSV file...' : 'Uploading to server...'}
                   </span>
                 </div>
                 {processingToServer && (
                   <>
-                    <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div style={{background : background.primary}}  className="w-full bg-gray-700 rounded-full h-2">
                       <div 
                         className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
                         style={{ width: `${uploadProgress}%` }}
                       ></div>
                     </div>
-                    <div className="text-sm text-gray-400 mt-2">
+                    <div style={{color : text.secondary}} className="text-sm text-gray-400 mt-2">
                       {Math.round(uploadProgress)}% uploaded
                     </div>
                   </>
@@ -447,21 +444,20 @@ export default function CSVUploadPage() {
               </div>
             )}
 
-            {/* Uploaded Files List */}
-            <div className="bg-gray-800 rounded-xl p-6  max-h-[300px] overflow-y-scroll custom_scrollbar">
-              <h3 className="text-xl font-semibold mb-4">Processed Files</h3>
+            <div style={{background: background.secondary}} className="bg-gray-800 shadow-xl rounded-xl p-6  max-h-[300px] overflow-y-auto custom_scrollbar">
+              <h3 style={{color : text.primary}} className="text-xl font-semibold mb-4">Processed Files</h3>
               {uploadedFiles.length === 0 ? (
-                <p className="text-gray-400">No files processed yet</p>
+                <p style={{color : text.primary}} className="text-gray-400">No files processed yet</p>
               ) : (
                 <div className="space-y-3">
                   {uploadedFiles.map((file) => (
-                    <div key={file.id} className="p-4 bg-gray-700 rounded-lg">
+                    <div style={{background : background.secondary}} key={file.id} className="p-4 shadow-2xl bg-gray-700 rounded-lg">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3">
                           <FileText className="w-6 h-6 text-blue-400" />
                           <div>
-                            <p className="font-medium">{file.name}</p>
-                            <p className="text-sm text-gray-400">
+                            <p style={{color : text.primary}} className="font-medium">{file.name}</p>
+                            <p style={{color : text.secondary}} className="text-sm text-gray-400">
                               {file.rows?.toLocaleString() || 0} rows, {file.columns || 0} columns
                             </p>
                           </div>
@@ -485,14 +481,14 @@ export default function CSVUploadPage() {
                           className="p-2 hover:bg-gray-600 rounded-lg transition-colors"
                           title="Preview"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye color={text.primary} className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => downloadProcessedFile(file)}
                           className="p-2 hover:bg-gray-600 rounded-lg transition-colors"
                           title="Download CSV"
                         >
-                          <Download className="w-4 h-4" />
+                          <Download color={text.primary} className="w-4 h-4" />
                         </button>
                         {!file.serverUploaded && (
                           <button
@@ -521,17 +517,17 @@ export default function CSVUploadPage() {
           </div>
 
           {/* Preview Section */}
-          <div className="bg-gray-800 rounded-xl p-6 ">
-            <h3 className="text-xl font-semibold mb-4">Data Preview</h3>
+          <div style={{background : background.secondary}} className="bg-gray-800 shadow-xl rounded-xl p-6 ">
+            <h3 style={{color : text.primary}} className="text-xl font-semibold mb-4">Data Preview</h3>
             {parsedData ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">
+                  <span style={{color : text.primary}} className="text-sm text-gray-400">
                     Showing first {Math.min(parsedData.rows.length, 100)} rows of {parsedData.totalRows?.toLocaleString() || 0} total rows
                   </span>
                   <div className="flex items-center space-x-2">
                     {previewData && !previewData.serverUploaded && (
-                      <span className="text-yellow-400 text-xs bg-yellow-900/30 px-2 py-1 rounded">
+                      <span style={{color : text.secondary}} className="text-yellow-400 text-xs bg-yellow-900/30 px-2 py-1 rounded">
                         Local Only
                       </span>
                     )}
@@ -540,27 +536,27 @@ export default function CSVUploadPage() {
                       className="flex items-center space-x-2 text-blue-400 hover:text-blue-300"
                     >
                       <Download className="w-4 h-4" />
-                      <span>Download</span>
+                      <span >Download</span>
                     </button>
                   </div>
                 </div>
                 
-                <div className="overflow-x-auto max-h-96 custom_scrollbar">
+                <div className="overflow-x-auto max-h-96 custom_scrollbar custom_scrollbar_bottom">
                   <table className="w-full text-sm">
-                    <thead className="sticky top-0 bg-gray-800">
+                    <thead style={{background : background.secondary}} className="shadow-xl sticky top-0 bg-gray-800">
                       <tr className="border-b border-gray-700">
                         {parsedData.headers.map((header, idx) => (
-                          <th key={idx} className="text-left p-2 font-medium text-gray-300">
+                          <th style={{color : text.primary}} key={idx} className="text-left p-2 font-medium text-gray-300">
                             {header}
                           </th>
                         ))}
                       </tr>
-                    </thead>
+                    </thead>  
                     <tbody>
                       {parsedData.rows.map((row, idx) => (
                         <tr key={idx} className="border-b border-gray-700/50">
                           {row.map((cell, cellIdx) => (
-                            <td key={cellIdx} className="p-2 text-gray-300">
+                            <td style={{color : text.primary}} key={cellIdx} className="p-2 text-gray-300">
                               {String(cell || '')}
                             </td>
                           ))}
@@ -588,20 +584,15 @@ export default function CSVUploadPage() {
                       >
                         {processingToServer ? 'Uploading...' : 'Upload to Server'}
                       </button>
-                      {!previewData?.serverUploaded && (
-                        <span className="text-gray-400 text-sm">Upload to server first</span>
-                      )}
+                    
                     </div>
                   )}
-                  <button className="bg-gray-700 px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
-                    Configure Mapping
-                  </button>
                 </div>
               </div>
             ) : (
               <div className="text-center py-12">
                 <FileText className="w-16 h-16 mx-auto mb-4 text-gray-600" />
-                <p className="text-gray-400">Upload a CSV file to see preview</p>
+                <p style={{color : text.secondary}} className="text-gray-400">Upload a CSV file to see preview</p>
               </div>
             )}
           </div>
@@ -609,25 +600,25 @@ export default function CSVUploadPage() {
 
         {/* Processing Stats */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-gray-800 rounded-xl p-6 text-center">
+          <div style={{background : background.primary}} className="bg-gray-800 shadow-xl rounded-xl p-6 text-center">
             <div className="text-3xl font-bold text-blue-400 mb-2">
               {uploadedFiles.length}
             </div>
             <div className="text-gray-400">Files Processed</div>
           </div>
-          <div className="bg-gray-800 rounded-xl p-6 text-center">
+          <div style={{background : background.primary}} className="bg-gray-800 shadow-xl rounded-xl p-6 text-center">
             <div className="text-3xl font-bold text-purple-400 mb-2">
               {uploadedFiles.reduce((acc, file) => acc + (file.rows || 0), 0).toLocaleString()}
             </div>
             <div className="text-gray-400">Total Rows</div>
           </div>
-          <div className="bg-gray-800 rounded-xl p-6 text-center">
+          <div style={{background : background.primary}} className="bg-gray-800 shadow-xl rounded-xl p-6 text-center">
             <div className="text-3xl font-bold text-pink-400 mb-2">
               {uploadedFiles.reduce((acc, file) => acc + (file.columns || 0), 0)}
             </div>
             <div className="text-gray-400">Total Columns</div>
           </div>
-          <div className="bg-gray-800 rounded-xl p-6 text-center">
+          <div style={{background : background.primary}} className="bg-gray-800 shadow-xl rounded-xl p-6 text-center">
             <div className="text-3xl font-bold text-green-400 mb-2">
               {uploadedFiles.filter(f => f.serverUploaded).length}
             </div>

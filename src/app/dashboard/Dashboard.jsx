@@ -4,13 +4,17 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Upload, FileText, Database, TrendingUp, Users, Activity, Settings, LogOut, Plus, Edit2, Trash2, Download, ChevronDown, Filter, BarChart3, PieChart as PieChartIcon, TrendingDown, Zap, Eye, X, Maximize2 } from 'lucide-react';
 import LoadingAnimation from '../Animation/LoadingAnimation';
 // import { userDetails } from '../UserDetails/loggedInUserDetails';
+
+import { BASE_URL } from '@/apiLinks';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import SheetModalShow from '@/components/SheetModal/SheetModal';
 import { useAuth } from '../AuthPage';
 import { useDispatch , useSelector } from 'react-redux';
 import { loadUserFromLocalStorage , loadTokenFromLocalStorage } from '@/components/Redux/AuthSlice';
-
+import DatasetInsights from './AiInsights';
+import ChartDetailModal from './DetailsModal';
+import { useThemeColor } from '@/hooks/themeColors';
 const Dashboard = () => {
   const [datasets, setDatasets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,7 +35,11 @@ const Dashboard = () => {
   const [showRefresh, setShowRefresh] = useState(false);
   const [selectedDataSetId, setSelectedDatasetId] = useState('');
   const [showSheet, setShowSheet] = useState(false);
+  const [getInsights , setGetInsights] = useState(false); 
   
+
+  const {background , text , border} = useThemeColor();
+
   const router = useRouter();
   const isLoading = false;
 
@@ -50,7 +58,7 @@ const Dashboard = () => {
       if(!token && !user?.email){
          router.push('/')
       }
-  },[dispatch])
+  },[dispatch , token , user])
 
 
   useEffect(()=>{
@@ -58,12 +66,31 @@ const Dashboard = () => {
       dispatch(loadUserFromLocalStorage())
   },[dispatch])
 
-
+  const formatNumber =(num)=> {
+  if (num >= 100000) {
+    
+    const lakhs = num / 100000;
+    if (lakhs % 1 === 0) {
+      return lakhs + 'L';
+    } else {
+      return (Math.round(lakhs * 10) / 10) + 'L';
+    }
+  } else if (num >= 1000) {
+    const thousands = num / 1000;
+    if (thousands % 1 === 0) {
+      return thousands + 'K';
+    } else {
+      return (Math.round(thousands * 10) / 10) + 'K';
+    }
+  } else {
+    return num.toString();
+  }
+}
  
   const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await fetch('https://myprod.onrender.com/api/users/alldatasets', {
+      const response = await fetch(`${BASE_URL}/api/users/alldatasets`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -76,7 +103,7 @@ const Dashboard = () => {
       
       const apiData = await response.json();
       
-      console.log('response data is ', apiData);
+      // console.log('response data is ', apiData);
       
       if (!apiData.datasets || !Array.isArray(apiData.datasets)) {
         throw new Error('Invalid API response format');
@@ -645,18 +672,21 @@ const Dashboard = () => {
       case 'bar':
           return (
             <ResponsiveContainer width="100%" height={isDetailed ? 400 : 300}>
-              <BarChart data={data}>
+              <BarChart style={{width :'100%'}} data={data}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="name" stroke="#9CA3AF" />
-                <YAxis stroke="#9CA3AF" />
+                <XAxis height={20} dataKey="name" stroke="#9CA3AF" />
+                <YAxis width={30} stroke="#9CA3AF" tickFormatter={formatNumber}/>
+
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#1F2937',
                     border: '1px solid #374151',
-                    borderRadius: '8px'
+                    borderRadius: '8px',
+                    width : '100%',
                   }}
+                  formatter={(value) => [formatNumber(value), 'Value']}
                 />
-                <Bar dataKey={isDetailed ? 'value' : chart.dataKey} fill={colors[0]} />
+                <Bar width={'100%'} dataKey={isDetailed ? 'value' : chart.dataKey} fill={colors[0]} />
               </BarChart>
             </ResponsiveContainer>
           );
@@ -689,14 +719,15 @@ const Dashboard = () => {
             <ResponsiveContainer width="100%" height={isDetailed ? 400 : 300}>
               <ScatterChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="x" stroke="#9CA3AF" />
-                <YAxis dataKey="y" stroke="#9CA3AF" />
+                <XAxis height={20} dataKey="x" stroke="#9CA3AF" />
+                <YAxis width={30} dataKey="y" stroke="#9CA3AF" tickFormatter={formatNumber} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#1F2937',
                     border: '1px solid #374151',
                     borderRadius: '8px'
                   }}
+                   formatter={(value) => [formatNumber(value), 'Value']}
                 />
                 <Scatter dataKey="y" fill={colors[2]} />
               </ScatterChart>
@@ -708,14 +739,15 @@ const Dashboard = () => {
             <ResponsiveContainer width="100%" height={isDetailed ? 400 : 300}>
               <LineChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="index" stroke="#9CA3AF" />
-                <YAxis stroke="#9CA3AF" />
+                <XAxis height={20} dataKey="index" stroke="#9CA3AF" />
+                <YAxis width={30} stroke="#9CA3AF" tickFormatter={formatNumber}/>
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#1F2937',
                     border: '1px solid #374151',
                     borderRadius: '8px'
                   }}
+                   formatter={(value) => [formatNumber(value), 'Value']}
                 />
                 <Line type="monotone" dataKey={isDetailed ? 'value' : chart.dataKey} stroke={colors[1]} strokeWidth={2} />
               </LineChart>
@@ -727,14 +759,15 @@ const Dashboard = () => {
             <ResponsiveContainer width="100%" height={isDetailed ? 400 : 300}>
               <AreaChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="index" stroke="#9CA3AF" />
-                <YAxis stroke="#9CA3AF" />
+                <XAxis height={20} dataKey="index" stroke="#9CA3AF" />
+                <YAxis width={30} stroke="#9CA3AF" tickFormatter={formatNumber}/>
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#1F2937',
                     border: '1px solid #374151',
                     borderRadius: '8px'
                   }}
+                   formatter={(value) => [formatNumber(value), 'Value']}
                 />
                 <Area type="monotone" dataKey="cumulative" stroke={colors[3]} fill={colors[3]} fillOpacity={0.3} />
               </AreaChart>
@@ -745,14 +778,15 @@ const Dashboard = () => {
           <ResponsiveContainer width="100%" height={isDetailed ? 400 : 300}>
             <BarChart data={data}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="name" stroke="#9CA3AF" />
-              <YAxis stroke="#9CA3AF" />
+              <XAxis height={20} dataKey="name" stroke="#9CA3AF" />
+              <YAxis width={30} stroke="#9CA3AF" tickFormatter={formatNumber}/>
               <Tooltip
                 contentStyle={{
                   backgroundColor: '#1F2937',
                   border: '1px solid #374151',
                   borderRadius: '8px'
                 }}
+                 formatter={(value) => [formatNumber(value), 'Value']}
               />
               <Bar dataKey="average" fill={colors[ 4 ]} />
               {isDetailed && <Bar dataKey="total" fill={colors[ 1 ]} />}
@@ -765,14 +799,15 @@ const Dashboard = () => {
           <ResponsiveContainer width="100%" height={isDetailed ? 400 : 300}>
             <BarChart data={data}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="name" stroke="#9CA3AF" />
-              <YAxis stroke="#9CA3AF" />
+              <XAxis height={20} dataKey="name" stroke="#9CA3AF" />
+              <YAxis width={30} stroke="#9CA3AF" tickFormatter={formatNumber}/>
               <Tooltip
                 contentStyle={{
                   backgroundColor: '#1F2937',
                   border: '1px solid #374151',
                   borderRadius: '8px'
                 }}
+                 formatter={(value) => [formatNumber(value), 'Value']}
               />
               {( chart.columns || [] ).map( ( col, index ) => (
                 <Bar key={col} dataKey={col} fill={colors[ index % colors.length ]} />
@@ -786,14 +821,15 @@ const Dashboard = () => {
           <ResponsiveContainer width="100%" height={isDetailed ? 400 : 300}>
             <BarChart data={data}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="name" stroke="#9CA3AF" />
-              <YAxis stroke="#9CA3AF" />
+              <XAxis height={20} dataKey="name" stroke="#9CA3AF" />
+              <YAxis width={30} stroke="#9CA3AF" tickFormatter={formatNumber}/>
               <Tooltip
                 contentStyle={{
                   backgroundColor: '#1F2937',
                   border: '1px solid #374151',
                   borderRadius: '8px'
                 }}
+                formatter={(value) => [formatNumber(value), 'Value']}
               />
               <Bar dataKey="average" fill={colors[ 0 ]} />
               <Bar dataKey="maximum" fill={colors[ 1 ]} />
@@ -819,6 +855,7 @@ const Dashboard = () => {
     }else {
       setShowRefresh(false)
     }
+    setGetInsights(false)
     setSelectedDatasetId(dataset);
     generateAllCharts( dataset );
     setShowDatasetSelector( false );
@@ -834,7 +871,7 @@ const Dashboard = () => {
   setLoading(true);
     try {
     const res = await axios.put(
-      `https://myprod.onrender.com/api/users/refresh/${datasetId?.id}`,
+      `${BASE_URL}/api/users/refresh/${datasetId?.id}`,
       {}, 
       {
         headers: {
@@ -858,21 +895,42 @@ const Dashboard = () => {
 
 
 
-  const handleDelete = ( id ) => {
-    if ( window.confirm( 'Are you sure you want to delete this dataset?' ) ) {
-      const newDatasets = datasets.filter( d => d.id !== id );
-      setDatasets( newDatasets );
-
+  const handleDelete = async( id ) => {
+    setLoading(true) 
+    try {
+      // const response = await axios.delete(`${BASE_URL}/users/datasets/${id}`, {
+      const response = await axios.delete(`http://localhost:5000/api/users/dataset/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+     });
+      
+     
+     if(response.data?.success){
+       const newDatasets = datasets.filter( d => d.id !== id );
+       setDatasets( newDatasets ); 
       if ( currentViewingDataset && currentViewingDataset.id === id ) {
         if ( newDatasets.length > 0 ) {
           setCurrentViewingDataset( newDatasets[ 0 ] );
           generateAllCharts( newDatasets[ 0 ] );
         } else {
-          setCurrentViewingDataset( null );
+          setCurrentViewingDataset( [] );
           setGeneratedCharts( [] );
+          setSelectedDataset([])
+          setDatasets([])
+          setSelectedDatasetId([]);
+          generateAllCharts([]);
         }
       }
+      alert('dataset removed successfully');
     }
+    
+    } catch (error) {
+      return alert('something went wrong, please try again.'); 
+     }finally{
+      setLoading(false)
+     }
   };
 
   const confirmRename = () => {
@@ -902,11 +960,11 @@ const Dashboard = () => {
 
   const getSourceColor = ( source ) => {
     switch ( source ) {
-      case 'csv': return 'bg-blue-500/20 text-blue-300';
-      case 'uploaded': return 'bg-blue-500/20 text-blue-300';
-      case 'sheet': return 'bg-green-500/20 text-green-300';
-      case 'api': return 'bg-purple-500/20 text-purple-300';
-      default: return 'bg-gray-500/20 text-gray-300';
+      case 'csv': return 'bg-blue-500/10 text-blue-600';
+      case 'uploaded': return 'bg-blue-500/10 text-blue-600';
+      case 'sheet': return 'bg-green-500/10 text-green-600';
+      case 'api': return 'bg-purple-500/10 text-purple-600';
+      default: return 'bg-gray-500/10 text-gray-600';
     }
   };
 
@@ -922,6 +980,9 @@ const Dashboard = () => {
     );
   }
 
+
+
+
   return (<>
     {isLoading ? <LoadingAnimation/> :  
      <>
@@ -932,7 +993,7 @@ const Dashboard = () => {
       </div>
      }
 
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <div style={{background : background.primary}} className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
           <br />
@@ -941,11 +1002,11 @@ const Dashboard = () => {
           <br />
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
+            <div style={{background : background.secondary }} className="bg-gray-800/50 shadow-xl backdrop-blur-sm rounded-xl p-6 ">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-400 text-sm">Generated Charts</p>
-                  <p className="text-3xl font-bold text-white mt-1">{generatedCharts.length}</p>
+                  <p style={{color : text.secondary}} className="text-gray-400 text-sm">Generated Charts</p>
+                  <p style={{color : text.primary}} className="text-3xl font-bold text-white mt-1">{generatedCharts.length}</p>
                 </div>
                 <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
                   <BarChart3 className="w-6 h-6 text-blue-400" />
@@ -953,11 +1014,11 @@ const Dashboard = () => {
               </div>
             </div>
 
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
+            <div style={{background : background.secondary }} className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 shadow-xl">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-400 text-sm">Numeric Columns</p>
-                  <p className="text-3xl font-bold text-white mt-1">
+                  <p style={{color : text.secondary}} className="text-gray-400 text-sm">Numeric Columns</p>
+                  <p style={{color : text.primary}} className="text-3xl font-bold text-white mt-1">
                     {chartStats.numericColumns || 0}
                   </p>
                 </div>
@@ -967,11 +1028,11 @@ const Dashboard = () => {
               </div>
             </div>
 
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
-              <div className="flex items-center justify-between">
+             <div style={{background : background.secondary }} className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 shadow-xl">
+             <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-400 text-sm">Categorical Columns</p>
-                  <p className="text-3xl font-bold text-white mt-1">
+                  <p style={{color : text.secondary}} className="text-gray-400 text-sm">Categorical Columns</p>
+                  <p style={{color : text.primary}}  className="text-3xl font-bold text-white mt-1">
                     {chartStats.categoricalColumns || 0}
                   </p>
                 </div>
@@ -981,11 +1042,11 @@ const Dashboard = () => {
               </div>
             </div>
 
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
-              <div className="flex items-center justify-between">
+           <div style={{background : background.secondary }} className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 shadow-xl">
+             <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-400 text-sm">Total Records</p>
-                  <p className="text-3xl font-bold text-white mt-1">
+                  <p style={{color : text.secondary}} className="text-gray-400 text-sm">Total Records</p>
+                  <p style={{color : text.primary}} className="text-3xl font-bold text-white mt-1">
                     {( chartStats.totalRecords || 0 ).toLocaleString()}
                   </p>
                 </div>
@@ -996,13 +1057,12 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Charts Toggle */}
           {generatedCharts.length > 0 && (
             <div className="mb-6">
-              <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+              <div style={{background : background.secondary }} className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 shadow-xl">
                 <div className="flex items-center justify-between">
                   <div className='flex flex-row items-center gap-10 '>
-                  <h3 className="text-xl font-semibold text-white">Data Visualizations</h3>
+                  <h3 style={{color : text.primary}} className="text-xl font-semibold text-white">Data Visualizations</h3>
                  {showRefresh && 
                   <button
                     onClick={() => handleRefreshSheet(selectedDataSetId)}
@@ -1012,7 +1072,7 @@ const Dashboard = () => {
                   </div>
                   <button
                     onClick={() => setShowAllCharts( !showAllCharts )}
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200"
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 cursor-pointer text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200"
                   >
                     {showAllCharts ? 'Hide Charts' : `Show All ${generatedCharts.length} Charts`}
                   </button>
@@ -1020,42 +1080,44 @@ const Dashboard = () => {
               </div>
             </div>
           )}
+          {datasets.length > 0 && 
           <div className="mb-6">
-            <div className="bg-gray-800/50  rounded-xl p-4 border border-gray-700">
-              <div className="flex items-center justify-between">
+            <div style={{background : background.secondary}} className="bg-gray-800/50  rounded-xl p-4 shadow-xl">
+              <div className="flex items-center justify-between flex-wrap">
                 <div className="flex items-center space-x-4">
-                  <h2 className="text-lg font-semibold text-white">Current Dataset:</h2>
+                  <h2 style={{color : text.primary}} className="md:text-lg text-[13px] font-semibold text-white">Current Dataset:</h2>
                   <div className="relative">
                     <button
                       onClick={() => setShowDatasetSelector( !showDatasetSelector )}
-                      className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
+                      className="flex items-center md:text-[18px] cursor-pointer text-[12px] space-x-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
                     >
                       <span>{currentViewingDataset ? currentViewingDataset.name : 'Select Dataset'}</span>
-                      <ChevronDown className="w-4 h-4" />
+                      <ChevronDown className="md:w-4 md:h-4 w-4 h-4" />
                     </button>
                   
                     {showDatasetSelector && (
-                      <div className="absolute top-full left-0 mt-2 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50">
+                      <div style={{background : background.secondary }} className="absolute top-full left-0 mt-2 w-64 bg-gray-800 shadow-2xl rounded-lg  z-50">
                         {datasets.map( ( dataset ) => (
                           <button
                             key={dataset.id}
+                            
                             onClick={() => handleDatasetSelection( dataset )}
-                            className="w-full text-left px-4 py-3 hover:bg-gray-700 text-white border-b border-gray-700 last:border-b-0 transition-colors"
+                            className="w-full text-left px-4 py-3 cursor-pointer text-white border-b border-gray-700 last:border-b-0 transition-colors"
                           >
-                            <div className="font-medium">{dataset.name}</div>
-                            <div className="text-sm text-gray-400">{dataset.records} records</div>
+                            <div style={{color : text.primary}} className="font-medium">{dataset.name}</div>
+                            <div style={{color : text.secondary}} className="text-sm text-gray-400">{dataset.records} records</div>
                           </button>
                         ) )}
                       </div>
                     )}
                   </div>
-                   <button onClick={()=>setShowSheet(true)} className='bg-blue-500 px-6 py-2 text-white text-center rounded-[5px] cursor-pointer'>
+                   <button onClick={()=>setShowSheet(true)} className='bg-blue-500 px-6 md:text-[18px] text-[12px] py-2 text-white text-center rounded-[5px] cursor-pointer'>
                        Show Sheet 
                    </button>
                 </div>
 
                 {currentViewingDataset && (
-                  <div className="text-sm text-gray-400">
+                  <div style={{color : text.secondary}} className="text-sm text-gray-400 md:mt-0 mt-4">
                     <span>{currentViewingDataset.records} records</span>
                     <span className="mx-2">•</span>
                     <span>{availableColumns.length} columns</span>
@@ -1066,105 +1128,100 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
+          }
 
           {showAllCharts && generatedCharts.length > 0 && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
               {generatedCharts.map( ( chart ) => (
-                <div key={chart.id} className="bg-gray-800/50 min-w-[320px] min-h-[320px] backdrop-blur-sm rounded-xl p-6 border border-gray-700">
+                <div style={{background : background.secondary }}  key={chart.id} className="bg-gray-800/50 min-w-[320px] min-h-[320px] shadow-xl backdrop-blur-sm rounded-xl p-6 ">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-white">{chart.title}</h3>
+                    <h3 style={{color : text.primary}} className="text-lg font-semibold text-white">{chart.title}</h3>
                     <div className="flex items-center space-x-2">
-                      <span className="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded">
-                        {chart.type}
-                      </span>
+                      
                       <button
                         onClick={() => showChartDetail( chart )}
-                        className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white text-xs px-3 py-1 rounded-lg transition-all duration-200 flex items-center space-x-1"
+                        className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 cursor-pointer hover:to-cyan-600 text-white text-xs px-3 py-1 rounded-lg transition-all duration-200 flex items-center space-x-1"
                       >
                         <Eye className="w-3 h-3" />
                         <span>View Details</span>
                       </button>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-400 mb-4">{chart.description}</p>
+                  <p style={{color : text.secondary}} className="text-sm text-gray-400 mb-4">{chart.description}</p>
                   {renderChart( chart )}
                 </div>
               ) )}
             </div>
           )}
 
-          {/* Quick Preview Charts (Top 6) - Updated with View Details Button */}
           {!showAllCharts && generatedCharts.length > 0 && (
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
               {generatedCharts.slice( 0, 6 ).map( ( chart ) => (
-                <div key={chart.id} className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
+                <div style={{background : background.secondary }} key={chart.id} className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 shadow-xl">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-white">{chart.title}</h3>
+                    <h3 style={{color : text.primary}} className="text-lg font-semibold text-white">{chart.title}</h3>
                     <div className="flex items-center space-x-2">
-                      <span className="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded">
-                        {chart.type}
-                      </span>
                       <button
                         onClick={() => showChartDetail( chart )}
-                        className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white text-xs px-3 py-1 rounded-lg transition-all duration-200 flex items-center space-x-1"
+                        className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 cursor-pointer hover:to-cyan-600 text-white text-xs px-3 py-1 rounded-lg transition-all duration-200 flex items-center space-x-1"
                       >
                         <Eye className="w-3 h-3" />
                         <span>Details</span>
                       </button>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-400 mb-4">{chart.description}</p>
+                  <p style={{color : text.secondary}} className="text-sm text-gray-400 mb-4">{chart.description}</p>
                   {renderChart( chart )}
                 </div>
               ) )}
             </div>
           )}
 
-          {!currentViewingDataset && (
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-12 border border-gray-700 text-center mb-8">
+          {!datasets.length > 0 && (
+            <div style={{background : background.secondary}} className="bg-gray-800/50 shadow-xl backdrop-blur-sm rounded-xl p-12 border border-gray-700 text-center mb-8">
               <Database className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-white mb-2">No Dataset Selected</h3>
-              <p className="text-gray-400">Select a dataset above to view its visualizations and data analysis.</p>
+              <h3 style={{color : text.primary}} className="text-xl font-semibold text-white mb-2">No Dataset Selected</h3>
+              <p style={{color : text.secondary}} className="text-gray-400">Select a dataset above to view its visualizations and data analysis.</p>
             </div>
           )}
 
           {generatedCharts.length > 0 && (
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700 mb-8">
-              <h3 className="text-xl font-semibold text-white mb-4">Chart Analytics Summary</h3>
+            <div style={{background : background.secondary}} className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 shadow-xl mb-4">
+              <h3 style={{color : text.primary}} className="text-xl font-semibold text-white mb-4">Chart Analytics Summary</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-gray-700/30 rounded-lg p-4">
+                <div style={{background : background.secondary}}  className="bg-gray-700/30 shadow-xl rounded-lg p-4">
                   <div className="flex items-center space-x-2 mb-2">
-                    <BarChart3 className="w-5 h-5 text-blue-400" />
-                    <span className="text-sm font-medium text-gray-300">Bar Charts</span>
+                    <BarChart3  className="w-5 h-5 text-blue-400" />
+                    <span style={{color : text.secondary}} className="text-sm font-medium text-gray-300">Bar Charts</span>
                   </div>
-                  <p className="text-2xl font-bold text-white">
+                  <p style={{color : text.primary}} className="text-2xl font-bold text-white">
                     {generatedCharts.filter( c => c.type.includes( 'bar' ) || c.type === 'groupedBar' || c.type === 'multiBar' || c.type === 'summaryBar' ).length}
                   </p>
                 </div>
-                <div className="bg-gray-700/30 rounded-lg p-4">
+                <div style={{background : background.secondary}}  className="bg-gray-700/30 shadow-xl rounded-lg p-4">
                   <div className="flex items-center space-x-2 mb-2">
                     <PieChartIcon className="w-5 h-5 text-purple-400" />
-                    <span className="text-sm font-medium text-gray-300">Pie Charts</span>
+                    <span style={{color : text.secondary}} className="text-sm font-medium text-gray-300">Pie Charts</span>
                   </div>
-                  <p className="text-2xl font-bold text-white">
+                  <p style={{color : text.primary}} className="text-2xl font-bold text-white">
                     {generatedCharts.filter( c => c.type === 'pie' ).length}
                   </p>
                 </div>
-                <div className="bg-gray-700/30 rounded-lg p-4">
+                <div style={{background : background.secondary}}  className="bg-gray-700/30 shadow-xl rounded-lg p-4">
                   <div className="flex items-center space-x-2 mb-2">
                     <TrendingUp className="w-5 h-5 text-green-400" />
-                    <span className="text-sm font-medium text-gray-300">Line/Area Charts</span>
+                    <span style={{color : text.secondary}} className="text-sm font-medium text-gray-300">Line/Area Charts</span>
                   </div>
-                  <p className="text-2xl font-bold text-white">
+                  <p style={{color : text.primary}} className="text-2xl font-bold text-white">
                     {generatedCharts.filter( c => c.type === 'line' || c.type === 'area' ).length}
                   </p>
                 </div>
-                <div className="bg-gray-700/30 rounded-lg p-4">
+                <div style={{background : background.secondary}}  className="bg-gray-700/30 shadow-xl rounded-lg p-4">
                   <div className="flex items-center space-x-2 mb-2">
                     <Zap className="w-5 h-5 text-orange-400" />
-                    <span className="text-sm font-medium text-gray-300">Scatter Plots</span>
+                    <span style={{color : text.secondary}} className="text-sm font-medium text-gray-300">Scatter Plots</span>
                   </div>
-                  <p className="text-2xl font-bold text-white">
+                  <p style={{color : text.primary}} className="text-2xl font-bold text-white">
                     {generatedCharts.filter( c => c.type === 'scatter' ).length}
                   </p>
                 </div>
@@ -1172,10 +1229,11 @@ const Dashboard = () => {
             </div>
           )}
 
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700">
+         {generatedCharts.length > 0 && datasets.length > 0 && 
+          <div style={{background : background.secondary}}  className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-300">
             <div className="p-6 border-b border-gray-700">
               <div className="flex justify-between items-center">
-                <h3 className="text-xl font-semibold text-white">Your Datasets</h3>
+                <h3 style={{color : text.primary}} className="text-xl font-semibold text-white">Your Datasets</h3>
                 <button
                   onClick={fetchData}
                   className="text-purple-400 hover:text-purple-300 transition-colors"
@@ -1188,15 +1246,15 @@ const Dashboard = () => {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-700">
-                    <th className="text-left p-4 text-gray-300 font-medium">Dataset Name</th>
-                    <th className="text-left p-4 text-gray-300 font-medium">Source</th>
-                    <th className="text-left p-4 text-gray-300 font-medium">Records</th>
-                    <th className="text-left p-4 text-gray-300 font-medium">Columns</th>
-                    <th className="text-left p-4 text-gray-300 font-medium">Charts</th>
-                    <th className="text-left p-4 text-gray-300 font-medium">Last Updated</th>
-                    <th className="text-left p-4 text-gray-300 font-medium">Status</th>
-                    <th className="text-left p-4 text-gray-300 font-medium">Actions</th>
+                  <tr style={{color : text.secondary}} className="border-b border-gray-700">
+                    <th className="text-left p-4  font-medium">Dataset Name</th>
+                    <th className="text-left p-4  font-medium">Source</th>
+                    <th className="text-left p-4  font-medium">Records</th>
+                    <th className="text-left p-4  font-medium">Columns</th>
+                    <th className="text-left p-4  font-medium">Charts</th>
+                    <th className="text-left p-4  font-medium">Last Updated</th>
+                    <th className="text-left p-4  font-medium">Status</th>
+                    <th className="text-left p-4  font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1207,47 +1265,47 @@ const Dashboard = () => {
                         }`}
                     >
                       <td className="p-4">
-                        <div className="font-medium text-white">{dataset.name}</div>
+                        <div style={{color : text.muted}} className="font-medium text-white">{dataset.name}</div>
                       </td>
                       <td className="p-4">
                         <div className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs ${getSourceColor( dataset.source )}`}>
                           {getSourceIcon( dataset.source )}
-                          <span className="capitalize">{dataset.source}</span>
+                          <span  className="capitalize ">{dataset.source}</span>
                         </div>
                       </td>
-                      <td className="p-4 text-gray-300">{dataset.records.toLocaleString()}</td>
-                      <td className="p-4 text-gray-300">{dataset.columns.length}</td>
-                      <td className="p-4 text-gray-300">
+                      <td style={{color : text.secondary}} className="p-4 text-gray-300">{dataset.records.toLocaleString()}</td>
+                      <td style={{color : text.secondary}} className="p-4 text-gray-300">{dataset.columns.length}</td>
+                      <td style={{color : text.secondary}} className="p-4 text-gray-300">
                         {currentViewingDataset && currentViewingDataset.id === dataset.id ? generatedCharts.length : '-'}
                       </td>
-                      <td className="p-4 text-gray-300">{dataset.lastUpdated}</td>
+                      <td style={{color : text.secondary}} className="p-4 text-gray-300">{dataset.lastUpdated}</td>
                       <td className="p-4">
                         <span className={`px-3 py-1 rounded-full text-xs ${dataset.status === 'active'
-                            ? 'bg-green-500/20 text-green-300'
-                            : 'bg-orange-500/20 text-orange-300'
+                            ? getSourceColor( dataset.source )
+                            : getSourceColor( dataset.source )
                           }`}>
                           {dataset.status}
                         </span>
                       </td>
                       <td className="p-4">
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-6">
                           <button
                             onClick={() => handleDatasetSelection( dataset )}
-                            className="text-purple-400 hover:text-purple-300 transition-colors"
+                            className="text-purple-400 hover:text-purple-300 cursor-pointer transition-colors"
                             title="Analyze Dataset"
                           >
                             <Activity className="w-4 h-4" />
                           </button>
-                          <button
+                          {/* <button
                             onClick={() => handleRename( dataset )}
                             className="text-blue-400 hover:text-blue-300 transition-colors"
                             title="Rename Dataset"
                           >
                             <Edit2 className="w-4 h-4" />
-                          </button>
+                          </button> */}
                           <button
                             onClick={() => handleDelete( dataset.id )}
-                            className="text-red-400 hover:text-red-300 transition-colors"
+                            className="text-red-400 hover:text-red-300 cursor-pointer transition-colors"
                             title="Delete Dataset"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -1259,7 +1317,8 @@ const Dashboard = () => {
                 </tbody>
               </table>
             </div>
-          </div>
+          </div>}
+
         </div>
 
         {showRenameModal && (
@@ -1292,189 +1351,29 @@ const Dashboard = () => {
         )}
       </div>
 
-      {showDetailModal && detailChart && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 whitespace-nowrap">
-          <div className="bg-gray-800 rounded-xl w-full max-w-6xl max-h-[90vh] overflow-y-scroll custom_scrollbar border border-gray-700">
-            <div className="sticky top-0 bg-gray-800 border-b border-gray-700 p-6 flex items-center justify-between z-10">
-              <div>
-                <h2 className="text-2xl font-bold text-white">{detailChart.title}</h2>
-                <p className="text-gray-400 mt-1">{detailChart.description}</p>
-                <div className="flex items-center space-x-2 mt-2">
-                  <span className="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded">
-                    {detailChart.type}
-                  </span>
-                  <span className="text-xs text-gray-400 bg-blue-600 px-2 py-1 rounded">
-                    Complete Dataset: {detailChartData.length} data points
-                  </span>
-                </div>
-                {( detailChartData.length > 20 && detailChart.type === 'pie' ) && <p className='bg-amber-50 px-4 py-2 rounded-[4px] mt-4'>We show <span className='text-red-500'> only 20 {detailChart.title.slice( 0, -10 )} details in chart</span>, <span>more you can see in Table</span></p>}
-              </div>
-              <button
-                onClick={() => setShowDetailModal( false )}
-                className="text-gray-400 hover:text-white transition-colors p-2"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                {detailChart.type === 'bar' && (
-                  <>
-                    <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-gray-300 mb-1">Total Sum</h4>
-                      <p className="text-xl font-bold text-white">{detailStats.total?.toFixed( 2 ) || 0}</p>
-                    </div>
-                    <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-gray-300 mb-1">Average</h4>
-                      <p className="text-xl font-bold text-white">{detailStats.average?.toFixed( 2 ) || 0}</p>
-                    </div>
-                    <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-gray-300 mb-1">Maximum</h4>
-                      <p className="text-xl font-bold text-white">{detailStats.maximum?.toFixed( 2 ) || 0}</p>
-                    </div>
-                    <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-gray-300 mb-1">Minimum</h4>
-                      <p className="text-xl font-bold text-white">{detailStats.minimum?.toFixed( 2 ) || 0}</p>
-                    </div>
-                  </>
-                )}
-
-                {detailChart.type === 'pie' && (
-                  <>
-                    <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-gray-300 mb-1">Total Categories</h4>
-                      <p className="text-xl font-bold text-white">{detailStats.totalCategories || 0}</p>
-                    </div>
-                    <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-gray-300 mb-1">Total Records</h4>
-                      <p className="text-xl font-bold text-white">{detailStats.totalRecords || 0}</p>
-                    </div>
-                    <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-gray-300 mb-1">Most Common</h4>
-                      <p className="text-sm font-bold text-white truncate">{detailStats.mostCommon || 'N/A'}</p>
-                    </div>
-                    <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-gray-300 mb-1">Diversity %</h4>
-                      <p className="text-xl font-bold text-white">{detailStats.diversity || 0}%</p>
-                    </div>
-                  </>
-                )}
-
-                {detailChart.type === 'scatter' && (
-                  <>
-                    <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-gray-300 mb-1">Correlation</h4>
-                      <p className="text-xl font-bold text-white">{detailStats.correlation || 0}</p>
-                    </div>
-                    <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-gray-300 mb-1">Total Points</h4>
-                      <p className="text-xl font-bold text-white">{detailStats.totalPoints || 0}</p>
-                    </div>
-                    <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-gray-300 mb-1">X Range</h4>
-                      <p className="text-sm font-bold text-white">
-                        {detailStats.xStats?.min?.toFixed( 2 )} - {detailStats.xStats?.max?.toFixed( 2 )}
-                      </p>
-                    </div>
-                    <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-gray-300 mb-1">Y Range</h4>
-                      <p className="text-sm font-bold text-white">
-                        {detailStats.yStats?.min?.toFixed( 2 )} - {detailStats.yStats?.max?.toFixed( 2 )}
-                      </p>
-                    </div>
-                  </>
-                )}
-
-                {( detailChart.type === 'line' || detailChart.type === 'area' ) && (
-                  <>
-                    <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-gray-300 mb-1">Trend</h4>
-                      <p className="text-xl font-bold text-white">{detailStats.trend || 'Stable'}</p>
-                    </div>
-                    <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-gray-300 mb-1">Total Change</h4>
-                      <p className="text-xl font-bold text-white">{detailStats.totalChange?.toFixed( 2 ) || 0}</p>
-                    </div>
-                    <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-gray-300 mb-1">Average Value</h4>
-                      <p className="text-xl font-bold text-white">{detailStats.averageValue?.toFixed( 2 ) || 0}</p>
-                    </div>
-                    <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-gray-300 mb-1">Volatility</h4>
-                      <p className="text-xl font-bold text-white">{detailStats.volatility || 0}</p>
-                    </div>
-                  </>
-                )}
-
-                {detailChart.type === 'groupedBar' && (
-                  <>
-                    <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-gray-300 mb-1">Total Groups</h4>
-                      <p className="text-xl font-bold text-white">{detailStats.totalGroups || 0}</p>
-                    </div>
-                    <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-gray-300 mb-1">Overall Total</h4>
-                      <p className="text-xl font-bold text-white">{detailStats.overallTotal?.toFixed( 2 ) || 0}</p>
-                    </div>
-                    <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-gray-300 mb-1">Highest Group</h4>
-                      <p className="text-sm font-bold text-white truncate">{detailStats.highestGroup || 'N/A'}</p>
-                    </div>
-                    <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-gray-300 mb-1">Overall Average</h4>
-                      <p className="text-xl font-bold text-white">{detailStats.overallAverage?.toFixed( 2 ) || 0}</p>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              <div className="bg-gray-700/30 rounded-xl p-4 mb-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Complete Data Visualization</h3>
-                <div className=''>
-                  {renderChart( detailChart, true )}
-                </div>
-              </div>
-
-              <div className="bg-gray-700/30 rounded-xl p-4">
-                <h3 className="text-lg font-semibold text-white mb-4">Raw Data Table</h3>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full border border-gray-600 text-sm text-gray-300">
-                    <thead>
-                      <tr className="bg-gray-800 border-b border-gray-600">
-                        {detailChartData.length > 0 &&
-                          Object.keys( detailChartData[ 0 ] )?.filter(col => col !== 'color')?.map( ( col ) => (
-                            <th key={col} className="px-4 py-2 text-left font-medium">
-                              {col}
-                            </th>
-                          ) )}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {detailChartData.map( ( row, idx ) => (
-                        <tr key={idx} className="border-b border-gray-700 hover:bg-gray-700/30 transition-colors">
-                          {Object.entries( row )
-                            .filter( ( [ key, value ] ) => key !== 'color' )
-                            .map( ( [ key, value ], i ) => (
-                              <td key={i} className="px-4 py-2">
-                                {String( value )}
-                              </td>
-                            ) )
-                          }
-                        </tr>
-                      ) )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-
-            </div>
-          </div>
-        </div>
-      )}
+       {showDetailModal &&
+         detailChart && 
+         <ChartDetailModal 
+           chart={detailChart}
+           data={detailChartData} 
+           isOpen={showDetailModal} 
+           onClose={()=>setShowDetailModal(false)}
+           renderChart={renderChart}
+          />
+        }
           
     </>
+      {selectedDataSetId?.id && 
+      <div style={{background : background.primary}} className='flex w-[100%] justify-center items-center py-8 bg-transparent'> 
+        {!getInsights ? 
+          <button onClick={()=>setGetInsights(true)} className='bg-blue-400 text-white px-10 py-4 rounded-[6px] cursor-pointer '>
+            Get Insights Now
+         </button>
+          :
+          <DatasetInsights datasetId={selectedDataSetId?.id} userId={user?._id}/> 
+        }
+      </div>
+      }
      </>
    } 
     </> );

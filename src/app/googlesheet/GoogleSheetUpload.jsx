@@ -8,6 +8,8 @@ import { userDetails } from '../UserDetails/loggedInUserDetails';
 import { useSelector , useDispatch } from 'react-redux';
 import { loadUserFromLocalStorage , loadTokenFromLocalStorage } from '@/components/Redux/AuthSlice';
 import { useRouter } from 'next/navigation';
+import { BASE_URL } from '@/apiLinks';
+import { useThemeColor } from '@/hooks/themeColors';
 
 const GoogleSheetsUpload = () => {
   const [sheetUrl, setSheetUrl] = useState('');
@@ -21,9 +23,12 @@ const GoogleSheetsUpload = () => {
   const [uploadError, setUploadError] = useState('');
   const [uploadSuccess, setUploadSuccess] = useState('');
   
+  const {background , text} = useThemeColor();
+
   const route = useRouter()
   const dispatch = useDispatch();
-  const token = useSelector((state)=>state?.userLocalSlice.token)
+  const token = useSelector((state)=>state?.userLocalSlice?.token)
+  const user = useSelector((state)=>state?.userLocalSlice?.user)
       
   useEffect(()=>{
           dispatch(loadTokenFromLocalStorage())
@@ -82,7 +87,7 @@ const GoogleSheetsUpload = () => {
     if (!sheet || !sheet.data || sheet.data.length === 0) return null;
 
     const headers = Object.keys(sheet.data[0] || {});
-    const previewRows = sheet.data.slice(0, 6).map(row => {
+    const previewRows = sheet.data.slice(0, 7).map(row => {
       return headers.map(header => {
         const value = row[header];
         return value !== undefined && value !== null ? String(value) : '';
@@ -177,7 +182,6 @@ const GoogleSheetsUpload = () => {
     return;
   }
 
-  const API_BASE_URL = 'https://myprod.onrender.com';
   setUploading(true);
   setUploadError('');
   setUploadSuccess('');
@@ -189,7 +193,7 @@ const GoogleSheetsUpload = () => {
     }
     
 
-    const response = await fetch(`${API_BASE_URL}/api/users/googlesheetUrl` , {
+    const response = await fetch(`${BASE_URL}/api/users/googlesheetUrl` , {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -319,13 +323,15 @@ const GoogleSheetsUpload = () => {
     return `${Math.floor(diffInMinutes / 1440)}d ago`;
   };
 
-  if(!token){
-    route.push('/')
-  }
+   useEffect(()=>{
+        if(!token || !user?.email){
+          route.push('/')
+        }
+   },[token , dispatch , user])
 
   return (<>
       {!token ? <LoadingAnimation/> : 
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div style={{background : background.primary}}  className="min-h-screen bg-gray-900 text-white">
     
       <div className="absolute top-32 right-24 w-28 h-28 bg-green-600 rounded-full opacity-20 blur-xl"></div>
       <div className="absolute bottom-32 left-16 w-36 h-36 bg-blue-600 rounded-full opacity-15 blur-2xl"></div>
@@ -338,7 +344,7 @@ const GoogleSheetsUpload = () => {
               Google Sheets Import
             </span>
           </h1>
-          <p className="text-gray-300 text-lg">
+          <p style={{color : text.secondary}}  className="text-gray-300 text-lg">
             Connect and import CSV data from Google Sheets, Google Drive, or direct CSV links
           </p>
         </div>
@@ -347,16 +353,17 @@ const GoogleSheetsUpload = () => {
         
           <div className="lg:col-span-2 space-y-6 ">
           
-            <div className="bg-gray-800 rounded-xl p-6">
-              <h3 className="text-xl font-semibold mb-4">Import New Sheet</h3>
+            <div style={{background : background.primary}} className="bg-gray-800 shadow-xl rounded-xl p-6">
+              <h3 style={{color : text.secondary}} className="text-xl font-semibold mb-4">Import New Sheet</h3>
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Google Sheets URL, Google Drive CSV, or Direct CSV Link</label>
+                  <label style={{color : text.secondary}} className="block text-sm font-medium mb-2">Google Sheets URL, Google Drive CSV, or Direct CSV Link</label>
                   <div className="relative">
                     <input
                       type="url"
                       value={sheetUrl}
+                      style={{background : background.secondary , color : text.secondary}}
                       onChange={(e) => {
                         setSheetUrl(e.target.value);
                         setUrlError('');
@@ -374,18 +381,18 @@ const GoogleSheetsUpload = () => {
                   )}
                 </div>
 
-                <div className="bg-gray-700/50 rounded-lg p-4">
-                  <h4 className="font-medium mb-2">Supported Formats:</h4>
+                <div style={{background : background.secondary}} className="bg-gray-700/50 shadow-xl rounded-lg p-4">
+                  <h4 style={{color : text.primary}} className="font-medium mb-2">Supported Formats:</h4>
                   <ul className="text-sm text-gray-300 space-y-1">
-                    <li className="flex items-center">
+                    <li style={{color : text.secondary}} className="flex items-center">
                       <Globe className="w-4 h-4 mr-2 text-green-400" />
                       Google Sheets (public or shareable links)
                     </li>
-                    <li className="flex items-center">
+                    <li style={{color : text.secondary}}  className="flex items-center">
                       <ExternalLink className="w-4 h-4 mr-2 text-blue-400" />
                       Google Drive CSV files (convert to Google Sheets for best results)
                     </li>
-                    <li className="flex items-center">
+                    <li style={{color : text.secondary}} className="flex items-center">
                       <ExternalLink className="w-4 h-4 mr-2 text-purple-400" />
                       Direct CSV file links
                     </li>
@@ -414,19 +421,20 @@ const GoogleSheetsUpload = () => {
               </div>
             </div>
 
-            <div className="bg-gray-800 rounded-xl p-6 ">
-              <h3 className="text-xl font-semibold mb-4">Connected Sheets</h3>
+            <div style={{background : background.secondary}} className="bg-gray-800 shadow-xl rounded-xl p-6 ">
+              <h3 style={{color : text.secondary}} className="text-xl font-semibold mb-4">Connected Sheets</h3>
               {importedSheets.length === 0 ? (
                 <div className="text-center py-8">
                   <ExternalLink className="w-16 h-16 mx-auto mb-4 text-gray-600" />
-                  <p className="text-gray-400">No sheets connected yet</p>
+                  <p style={{color : text.secondary}}  className="text-gray-400">No sheets connected yet</p>
                 </div>
               ) : (
                 <div className="space-y-4 max-h-[260px] overflow-y-auto py-2 custom_scrollbar px-5">
                   {importedSheets.map((sheet) => (
                     <div 
                       key={sheet.id} 
-                      className={`bg-gray-700 rounded-lg p-4 transition-all cursor-pointer ${
+                      style={{background : background.primary}}
+                      className={`bg-gray-700 rounded-lg p-4 shadow-lg transition-all cursor-pointer ${
                         selectedSheetId === sheet.id ? 'ring-2 ring-green-500 bg-gray-700/80' : 'hover:bg-gray-600'
                       }`}
                       onClick={() => handleSheetSelection(sheet.id)}
@@ -434,7 +442,7 @@ const GoogleSheetsUpload = () => {
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center space-x-2 mb-2">
-                            <h4 className="font-medium">{sheet.name}</h4>
+                            <h4 style={{color : text.secondary}} className="font-medium">{sheet.name}</h4>
                             {sheet.isPublic ? (
                               <Globe className="w-4 h-4 text-green-400" />
                             ) : (
@@ -449,13 +457,13 @@ const GoogleSheetsUpload = () => {
                               {sheet.status}
                             </span>
                             {selectedSheetId === sheet.id && (
-                              <Eye className="w-4 h-4 text-green-400" />
+                              <Eye color={text.primary}  className="w-4 h-4 text-green-400" />
                             )}
                           </div>
-                          <p className="text-sm text-gray-400 mb-2">
+                          <p style={{color : text.secondary}} className="text-sm text-gray-400 mb-2">
                             {sheet.rows.toLocaleString()} rows • {sheet.columns} columns
                           </p>
-                          <p className="text-xs text-gray-500">
+                          <p style={{color : text.secondary}} className="text-xs text-gray-500">
                             Last synced: {formatTimeAgo(sheet.lastSync)}
                           </p>
                         </div>
@@ -467,9 +475,9 @@ const GoogleSheetsUpload = () => {
                               syncSheet(sheet.id);
                             }}
                             disabled={sheet.status === 'syncing'}
-                            className="p-2 hover:bg-gray-600 rounded-lg transition-colors disabled:opacity-50"
+                            className="p-2 hover:bg-gray-400 rounded-lg transition-colors disabled:opacity-50"
                           >
-                            <RefreshCw className={`w-4 h-4 ${sheet.status === 'syncing' ? 'animate-spin' : ''}`} />
+                            <RefreshCw color={text.secondary} className={`w-4 cursor-pointer  h-4 ${sheet.status === 'syncing' ? 'animate-spin' : ''}`} />
                           </button>
                           <button 
                             onClick={(e) => {
@@ -489,11 +497,11 @@ const GoogleSheetsUpload = () => {
             </div>
           </div>
 
-          <div className="bg-gray-800 rounded-xl p-6">
+          <div style={{background : background.secondary}} className="bg-gray-800 shadow-xl rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold">Live Preview</h3>
+              <h3 style={{color : text.secondary}} className="text-xl font-semibold">Live Preview</h3>
               {importedSheets.length > 1 && (
-                <div className="text-xs text-gray-400">
+                <div style={{color : text.secondary}} className="text-xs text-gray-400">
                   Click sheet to preview
                 </div>
               )}
@@ -502,15 +510,15 @@ const GoogleSheetsUpload = () => {
             {previewData ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-400">Sheet: {previewData.sheetName}</span>
+                  <span style={{color : text.secondary}} className="text-gray-400">Sheet: {previewData.sheetName}</span>
                   <span className="text-green-400 flex items-center">
                     <CheckCircle className="w-4 h-4 mr-1" />
                     Ready
                   </span>
                 </div>
                 
-                <div className="text-sm text-gray-400">
-                  Showing 5 of {previewData.totalRows.toLocaleString()} rows
+                <div style={{color : text.secondary}} className="text-sm text-gray-400">
+                  Showing 7 of {previewData.totalRows.toLocaleString()} rows
                 </div>
                 
                 <div className="overflow-x-auto custom_scrollbar_bottom">
@@ -518,7 +526,7 @@ const GoogleSheetsUpload = () => {
                     <thead>
                       <tr className="border-b border-gray-700">
                         {previewData.headers.map((header, idx) => (
-                          <th key={idx} className="text-left p-2 font-medium text-gray-300 text-xs">
+                          <th key={idx} style={{color : text.primary}} className="text-left p-2 font-medium text-gray-300 text-xs">
                             {header}
                           </th>
                         ))}
@@ -528,7 +536,7 @@ const GoogleSheetsUpload = () => {
                       {previewData.rows.map((row, idx) => (
                         <tr key={idx} className="border-b border-gray-700/50">
                           {row.map((cell, cellIdx) => (
-                            <td key={cellIdx} className="p-2 text-gray-300 text-xs">
+                            <td key={cellIdx} style={{color : text.secondary}} className="p-2 text-gray-300 text-xs">
                               {cell}
                             </td>
                           ))}
@@ -591,25 +599,25 @@ const GoogleSheetsUpload = () => {
         </div>
 
         <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-gray-800 rounded-xl p-6 text-center">
+          <div style={{background : background.primary}}  className="bg-gray-800 shadow-xl rounded-xl p-6 text-center">
             <div className="text-3xl font-bold text-green-400 mb-2">
               {importedSheets.length}
             </div>
             <div className="text-gray-400 text-sm">Connected Sheets</div>
           </div>
-          <div className="bg-gray-800 rounded-xl p-6 text-center">
+          <div style={{background : background.primary}} className="bg-gray-800 shadow-xl rounded-xl p-6 text-center">
             <div className="text-3xl font-bold text-blue-400 mb-2">
               {importedSheets.filter(s => s.status === 'connected').length}
             </div>
             <div className="text-gray-400 text-sm">Uploaded</div>
           </div>
-          <div className="bg-gray-800 rounded-xl p-6 text-center">
+          <div  style={{background : background.primary}} className="bg-gray-800 shadow-xl rounded-xl p-6 text-center">
             <div className="text-3xl font-bold text-purple-400 mb-2">
               {importedSheets.reduce((acc, sheet) => acc + sheet.rows, 0).toLocaleString()}
             </div>
             <div className="text-gray-400 text-sm">Total Rows</div>
           </div>
-          <div className="bg-gray-800 rounded-xl p-6 text-center">
+          <div style={{background : background.primary}} className="bg-gray-800 shadow-xl rounded-xl p-6 text-center">
             <div className="text-3xl font-bold text-pink-400 mb-2">
               {importedSheets.filter(s => s.isPublic).length}
             </div>

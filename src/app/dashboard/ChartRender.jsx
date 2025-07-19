@@ -1,3 +1,4 @@
+'use client'
 import React from 'react';
 import {
   ResponsiveContainer,
@@ -17,7 +18,7 @@ import {
   Cell,
   Scatter
 } from 'recharts';
-
+import { useThemeColor } from '@/hooks/themeColors';
 const ShowCharts = ({ 
   chart, 
   isDetailed = false, 
@@ -27,6 +28,8 @@ const ShowCharts = ({
   const renderChart = (chart, isDetailed = false) => {
     const colors = colorPalettes.primary;
     const data = isDetailed ? detailChartData : chart.data;
+    const {background , text} = useThemeColor();
+    
 
     switch (chart?.type) {
       case 'bar':

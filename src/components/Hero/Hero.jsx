@@ -1,7 +1,8 @@
 'use client';
-import { useDispatch , useSelector} from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react'
+import DynamicNumbers from '@/app/Animation/DynamicNumbers';
 import {
   ArrowRight,
   Play,
@@ -11,27 +12,30 @@ import { useEffect } from 'react';
 import { openLoginModal } from '@/components/Redux/LoginModal';
 import { useAuth } from '@/app/AuthPage';
 import { userDetails } from '@/app/UserDetails/loggedInUserDetails';
-import { loadUserFromLocalStorage , loadTokenFromLocalStorage } from '../Redux/AuthSlice';
+import { loadUserFromLocalStorage, loadTokenFromLocalStorage } from '../Redux/AuthSlice';
+import { useThemeColor } from '@/hooks/themeColors';
+import { TypewriterText } from '@/app/Animation/TypeTextWrite';
 
 const Hero = () => {
   const [ isModalOpen, setIsModalOpen ] = useState( false );
   const route = useRouter();
   const dispatch = useDispatch();
-  const token = useSelector((state)=>state?.userLocalSlice.token)
-    
-      
-    useEffect(()=>{
-        dispatch(loadTokenFromLocalStorage())
-    },[dispatch])
+  const token = useSelector( ( state ) => state?.userLocalSlice.token )
 
-  
+  const { background, text } = useThemeColor();
+
+  useEffect( () => {
+    dispatch( loadTokenFromLocalStorage() )
+  }, [ dispatch ] )
+
+
   const openModal = () => {
     setIsModalOpen( true );
     document.body.style.overflow = 'hidden';
   };
 
-   const handleGetstart = () => {
-  
+  const handleGetstart = () => {
+
     if ( token ) {
       route.push( 'csvupload' )
     } else {
@@ -49,7 +53,7 @@ const Hero = () => {
       <div className="container mx-auto px-6 py-20 relative z-10">
         <div className="text-center max-w-5xl mx-auto">
           <div className="animate-fade-in">
-            <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight">
+            <h1 style={{ color: text.muted }} className="text-5xl md:text-7xl font-bold mb-8 leading-tight">
               Transform Your
               <span className="bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent"> Startup Data </span>
               Into
@@ -57,9 +61,19 @@ const Hero = () => {
 
             </h1>
 
-            <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
+            {/* <p style={{color : text.secondary}} className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
               AI-powered analytics platform that turns your CSV files, Google Sheets, and API data into actionable insights for smarter business decisions.
-            </p>
+            </p> */}
+            <TypewriterText
+              text="AI-powered analytics platform that turns your CSV files, Google Sheets, and API data into actionable insights for smarter business decisions."
+              speed={30}
+              startDelay={1000}
+              showCursor={true}
+              cursorChar=""
+              className="text-xl md:text-2xl mb-12 max-w-3xl mx-auto leading-relaxed"
+              style={{ color: text.secondary }}
+              color ={text.secondary}
+            />
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
               <button onClick={handleGetstart} className="cursor-pointer group bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 px-8 py-4 rounded-full text-lg font-semibold transition-all duration-300 hover:scale-105 hover:shadow-2xl flex items-center space-x-2">
@@ -80,16 +94,22 @@ const Hero = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto">
               <div className="text-center">
-                <div className="text-3xl font-bold text-blue-400 mb-2">50+</div>
-                <div className="text-gray-400">Active Founders</div>
+                <div className="text-3xl font-bold text-blue-400 mb-2">
+                   <DynamicNumbers end={50} suffix="+" duration={2400} />
+                </div>
+                <div style={{color : text.muted}} className="text-gray-400">Active Founders</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-purple-400 mb-2">2k+</div>
-                <div className="text-gray-400">Data Points Analyzed</div>
+                <div className="text-3xl font-bold text-purple-400 mb-2">
+                  <DynamicNumbers end={2000} suffix="+" duration={2000} />
+                </div>
+                <div style={{color : text.muted}} className="text-gray-400">Data Points Analyzed</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-pink-400 mb-2">99.9%</div>
-                <div className="text-gray-400">Uptime SLA</div>
+                <div className="text-3xl font-bold text-pink-400 mb-2">
+                   <DynamicNumbers end={99} suffix="%" duration={2500} />
+                </div>
+                <div style={{color : text.muted}} className="text-gray-400">Uptime SLA</div>
               </div>
             </div>
           </div>

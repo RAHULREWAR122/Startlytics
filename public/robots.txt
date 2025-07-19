@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://startlytics-gi2w.vercel.app/sitemap.xml

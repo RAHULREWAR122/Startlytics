@@ -2,28 +2,25 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { 
-  CheckCircle,
-  Star,
- 
-} from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useThemeColor } from '@/hooks/themeColors';
 
-import ChatAi from '@/Pages/ChatAi/ChatAi';
-// import { userDetails } from '../../app/UserDetails/loggedInUserDetails';
-import Features from '@/Pages/Features/Features';
+import Features from '../Features/Features';
 import { openLoginModal } from '../Redux/LoginModal';
 import { useDispatch , useSelector} from 'react-redux';
 import Hero from '../Hero/Hero';
 import Pricing from '../Pricing/Pricing';
 import { loadTokenFromLocalStorage , loadUserFromLocalStorage } from '../Redux/AuthSlice';
+
+import Reviews from '../Reviews/Reviews';
+import HowItWorks from '../HowItWorks/HowItWorks';
 export default function HomePage() {
    
   const route = useRouter();
   const dispatch = useDispatch();
   const token = useSelector((state)=>state?.userLocalSlice.token)
   const user = useSelector((state)=>state?.userLocalSlice.user)
-   
+  const {background , text} = useThemeColor(); 
   // console.log('token ------------------- ', token);
 
    
@@ -53,89 +50,26 @@ export default function HomePage() {
         <meta name="description" content="Transform your startup data into actionable insights with AI-powered analytics, CSV uploads, Google Sheets integration, and personalized growth recommendations." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
+         
+        <meta name="description" content="Startlytics is the easiest way to upload CSV/Sheets and get instant AI-powered analytics. Try it today!" />
+        <meta name="keywords" content="data analytics, csv upload, ai analytics, google sheets, dashboard, startlytics" />
+        <meta property="og:title" content="Startlytics - Instant AI-Powered Data Insights" />
+        <meta property="og:description" content="Turn your spreadsheets into dashboards and answers." />
+        <meta property="og:image" content="/images/logo.svg" />
+        <meta property="og:url" content="https://startlytics-gi2w.vercel.app/" />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://startlytics-gi2w.vercel.app/about" />
+ 
       </Head>
       
-       <main className="bg-gray-900 text-white ">
+       <main style={{background : background.secondary}} className="bg-gray-900 text-white ">
        
        <Hero/>
+       <HowItWorks/>
        <Features/>
        <Pricing/>
-       
-        <section id="testimonials" className="py-20 bg-gray-800/50">
-          <div className="container mx-auto px-6">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold mb-6">
-                Loved by 
-                <span className="text-gradient"> Founders Worldwide</span>
-              </h2>
-              <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-                See what successful entrepreneurs are saying about Startlytics
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-8">
-                <div className="flex items-center mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-                <p className="text-gray-300 mb-6 leading-relaxed">
-                  "Startlytics transformed how we analyze our user data. The AI insights helped us identify growth opportunities we never saw before."
-                </p>
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold">SJ</span>
-                  </div>
-                  <div>
-                    <div className="font-semibold">Sarah Johnson</div>
-                    <div className="text-gray-400 text-sm">CEO, TechFlow</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-8">
-                <div className="flex items-center mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-                <p className="text-gray-300 mb-6 leading-relaxed">
-                  "The Google Sheets integration is seamless. We can now track our metrics in real-time without any manual work."
-                </p>
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold">MC</span>
-                  </div>
-                  <div>
-                    <div className="font-semibold">Mike Chen</div>
-                    <div className="text-gray-400 text-sm">Founder, DataViz</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-8">
-                <div className="flex items-center mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-                <p className="text-gray-300 mb-6 leading-relaxed">
-                  "Best investment for our startup. The weekly AI tips alone are worth the subscription price. Highly recommend!"
-                </p>
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold">AR</span>
-                  </div>
-                  <div>
-                    <div className="font-semibold">Alex Rodriguez</div>
-                    <div className="text-gray-400 text-sm">Co-founder, GrowthLab</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+       <Reviews/>
+   
 
         <section className="py-20">
           <div className="container mx-auto px-6">
@@ -157,7 +91,6 @@ export default function HomePage() {
         </section>
       </main>
  
-     <ChatAi/>
     </>
     
 

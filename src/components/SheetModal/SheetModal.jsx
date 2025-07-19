@@ -1,4 +1,6 @@
+'use client'
 import React, { useState, useMemo } from 'react';
+import { useThemeColor } from '@/hooks/themeColors';
 
 const SpreadsheetViewer = ({ sheetData }) => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -6,7 +8,7 @@ const SpreadsheetViewer = ({ sheetData }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const currentData = sheetData || { columns: ['Column A', 'Column B', 'Column C'], rawData: [] };
   const { columns, rawData } = currentData;
-
+  const { background , text } = useThemeColor();
   const filteredData = useMemo(() => {
     if (!searchTerm) return rawData;
     
@@ -70,16 +72,17 @@ const SpreadsheetViewer = ({ sheetData }) => {
   };
 
   return (
-    <div onClick={(e) => e.stopPropagation()} className="p-3 bg-gray-800 h-[80vh] w-[80vw] rounded-[10px]">
-      <div className="bg-gray-900 rounded-lg shadow-2xl overflow-hidden h-full flex flex-col border border-gray-700">
+    <div style={{background : background.secondary , color : text.secondary}} onClick={(e) => e.stopPropagation()} className="p-3  h-[80vh] w-[80vw] rounded-[10px]">
+      <div  className=" rounded-lg shadow-2xl overflow-hidden h-full flex flex-col border border-gray-700">
         
-        <div className="p-4 border-b border-gray-700 bg-gray-800 flex justify-between items-center">
+        <div className="p-4 border-b border-gray-700  flex justify-between items-center">
           <div className="flex items-center space-x-4">
             
             <select
               value={rowsPerPage}
+              style={{color: text.primary}}
               onChange={(e) => handleRowsPerPageChange(Number(e.target.value))}
-              className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="px-3 cursor-pointer py-2 shadow-xl border border-gray-600 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             >
               <option value={25}>25 rows</option>
               <option value={50}>50 rows</option>
@@ -87,7 +90,7 @@ const SpreadsheetViewer = ({ sheetData }) => {
               <option value={200}>200 rows</option>
             </select>
           </div>
-          <div className="text-sm text-gray-400">
+          <div style={{color : text.secondary}} className="text-sm text-gray-400">
             Showing {startIndex + 1}-{Math.min(endIndex, filteredData?.length)} of {filteredData?.length} rows
           </div>
         </div>
@@ -116,13 +119,14 @@ const SpreadsheetViewer = ({ sheetData }) => {
           <table className="w-full border-collapse">
             <thead>
               <tr>
-                <th className="w-12 h-8 bg-gray-700 border border-gray-600 text-xs font-medium text-gray-300 sticky left-0 z-10">
+                <th style={{color: text.primary}}  className="w-12 h-8  border border-gray-600 text-xs font-medium text-gray-300 sticky left-0 z-10">
                   #
                 </th>
                 {columns?.map((header, colIndex) => (
                   <th
                     key={colIndex}
-                    className="min-w-32 h-8 bg-gray-700 border border-gray-600 text-xs font-medium text-gray-300 px-2"
+                    style={{color: text.primary}} 
+                    className="min-w-32 h-8  border border-gray-600 text-xs font-medium text-gray-300 px-2"
                   >
                     {columnLabels[colIndex]}
                   </th>
@@ -130,8 +134,8 @@ const SpreadsheetViewer = ({ sheetData }) => {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td className="w-12 h-8 bg-gray-700 border border-gray-600 text-xs text-center font-medium text-gray-300 sticky left-0 z-10">
+              <tr style={{color: text.primary}} >
+                <td style={{color: text.primary}}  className="w-12 h-8  border border-gray-600 text-xs text-center font-medium text-gray-300 sticky left-0 z-10">
                   H
                 </td>
                 {columns?.map((header, colIndex) => (
@@ -142,15 +146,16 @@ const SpreadsheetViewer = ({ sheetData }) => {
                     <input
                       type="text"
                       value={header}
+                      style={{color: text.primary}} 
                       readOnly
-                      className="w-full h-full px-2 text-xs border-none outline-none bg-gray-700 text-gray-200 font-medium"
+                      className="w-full h-full px-2 text-xs border-none outline-none  text-gray-200 font-medium"
                     />
                   </td>
                 ))}
               </tr>
               {currentRows?.map((rowData1, rowIndex) => (
                 <tr key={startIndex + rowIndex}>
-                  <td className="w-12 h-8 bg-gray-700 border border-gray-600 text-xs text-center font-medium text-gray-300 sticky left-0 z-10">
+                  <td style={{color: text.primary}}  className="w-12 h-8  border border-gray-600 text-xs text-center font-medium text-gray-300 sticky left-0 z-10">
                     {startIndex + rowIndex + 1}
                   </td>
                   {columns?.map((header, colIndex) => (
@@ -160,9 +165,10 @@ const SpreadsheetViewer = ({ sheetData }) => {
                     >
                       <input
                         type="text"
-                        value={rowData1[header] || ''}
+                        value={rowData1[header] || '-'}
+                        style={{color: text.secondary}}
                         onChange={(e) => handleCellChange(startIndex + rowIndex, header, e.target.value)}
-                        className="w-full h-full px-2 text-xs border-none outline-none bg-gray-800 text-gray-200 focus:bg-gray-700 focus:ring-1 focus:ring-purple-500"
+                        className="w-full h-full px-2 text-xs border-none outline-none  text-gray-200 focus:bg-gray-700 focus:ring-1 focus:ring-purple-500"
                       />
                     </td>
                   ))}
@@ -172,8 +178,8 @@ const SpreadsheetViewer = ({ sheetData }) => {
           </table>
         </div>
 
-        <div className="p-4 bg-gray-800 border-t border-gray-700 flex justify-between items-center">
-          <div className="text-sm text-gray-400">
+        <div className="p-4  border-gray-700 flex justify-between items-center">
+          <div style={{color: text.primary}}  className="text-sm text-gray-400">
             Total Rows: {filteredData?.length} | Columns: {columns?.length}
           </div>
           
