@@ -898,8 +898,8 @@ const Dashboard = () => {
   const handleDelete = async( id ) => {
     setLoading(true) 
     try {
-      // const response = await axios.delete(`${BASE_URL}/users/datasets/${id}`, {
-      const response = await axios.delete(`http://localhost:5000/api/users/dataset/${id}`, {
+      const response = await axios.delete(`${BASE_URL}/api/users/datasets/${id}`, {
+      // const response = await axios.delete(`http://localhost:5000/api/users/dataset/${id}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
