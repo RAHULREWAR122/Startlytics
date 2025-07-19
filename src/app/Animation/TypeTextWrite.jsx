@@ -30,7 +30,7 @@ export const TypewriterText = ({
   }, [currentIndex, text, speed, startDelay]);
 
   return (
-    <p className={`${className}`} style={[style]}>
+    <p className={`${className}`} style={style}>
       <span style={{fontSize : textsize , color: color}} className=''>{displayText}</span>
       {showCursor && (
         <span 
