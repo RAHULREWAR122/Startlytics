@@ -4,7 +4,7 @@ import CursorLightEffect from "@/Pages/CursorEffect/CursorEffect";
 import "./globals.css";
 import { Inter } from 'next/font/google'
 import ReduxProvider from "@/components/Redux/Provider";
-import Navbar from "@/components/Navbar/Navbar";
+// import Navbar from "@/components/Navbar/Navbar";
 import Footer from "@/components/Home/Footer";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -82,7 +82,7 @@ export default function RootLayout({ children }) {
         <ReduxProvider>
           <Analytics />
           <CursorLightEffect />
-          <Navbar />
+          {/* <Navbar /> */}
           {children}
           <ToastContainer />
           <ChatAi />

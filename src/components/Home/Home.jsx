@@ -5,15 +5,15 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useThemeColor } from '@/hooks/themeColors';
 
-// import Features from '../Features/Features';
+import Features from '../Features/Features';
 import { openLoginModal } from '../Redux/LoginModal';
 import { useDispatch , useSelector} from 'react-redux';
-import Hero from '../Hero/Hero';
-// import Pricing from '../Pricing/Pricing';
+// import Hero from '../Hero/Hero';
+import Pricing from '../Pricing/Pricing';
 import { loadTokenFromLocalStorage , loadUserFromLocalStorage } from '../Redux/AuthSlice';
 
-// import Reviews from '../Reviews/Reviews';
-// import HowItWorks from '../HowItWorks/HowItWorks';
+import Reviews from '../Reviews/Reviews';
+import HowItWorks from '../HowItWorks/HowItWorks';
 export default function HomePage() {
    
   const route = useRouter();
@@ -59,11 +59,11 @@ export default function HomePage() {
       
        <main style={{background : background.secondary}} className="bg-gray-900 text-white ">
        
-       <Hero/>
-       {/* <HowItWorks/>
+       {/* <Hero/> */}
+       <HowItWorks/>
        <Features/>
        <Pricing/>
-       <Reviews/> */}
+       <Reviews/>
    
 
         <section className="py-20">
