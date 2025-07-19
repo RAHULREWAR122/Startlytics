@@ -77,7 +77,7 @@ export default function RootLayout({ children }) {
         <link rel="canonical" href="https://startlytics-gi2w.vercel.app/" />
       </head>
       <body
-        className={`${inter.className} ${geistSans.variable} ${geistMono.variable} custom_scrollbar font-inter`}
+        className={`${inter.className} ${geistSans.variable} ${geistMono.variable} custom_scrollbar font-inter max-w-[100vw] overflow-x-hidden`}
       >
         <ReduxProvider>
           <Analytics />

@@ -21,8 +21,7 @@ export default function HomePage() {
   const token = useSelector((state)=>state?.userLocalSlice.token)
   const user = useSelector((state)=>state?.userLocalSlice.user)
   const {background , text} = useThemeColor(); 
-  // console.log('token ------------------- ', token);
-
+ 
    
     useEffect(()=>{
         dispatch(loadTokenFromLocalStorage())
@@ -30,10 +29,6 @@ export default function HomePage() {
     },[dispatch])
   
   
-
-  // useEffect(()=>{
-  //     userDetails();  
-  // },[route])
     
   const getStart = ()=>{
      if(token){
@@ -65,10 +60,10 @@ export default function HomePage() {
        <main style={{background : background.secondary}} className="bg-gray-900 text-white ">
        
        <Hero/>
-       <HowItWorks/>
+       {/* <HowItWorks/>
        <Features/>
        <Pricing/>
-       <Reviews/>
+       <Reviews/> */}
    
 
         <section className="py-20">
