@@ -59,7 +59,7 @@ export default function HomePage() {
       
        <main style={{background : background.secondary}} className="bg-gray-900 text-white ">
        
-       {/* <Hero/> */}
+       <Hero/>
        <HowItWorks/>
        <Features/>
        <Pricing/>
