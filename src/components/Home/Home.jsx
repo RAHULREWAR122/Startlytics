@@ -8,7 +8,7 @@ import { useThemeColor } from '@/hooks/themeColors';
 import Features from '../Features/Features';
 import { openLoginModal } from '../Redux/LoginModal';
 import { useDispatch , useSelector} from 'react-redux';
-// import Hero from '../Hero/Hero';
+import Hero from '../Hero/Hero';
 import Pricing from '../Pricing/Pricing';
 import { loadTokenFromLocalStorage , loadUserFromLocalStorage } from '../Redux/AuthSlice';
 

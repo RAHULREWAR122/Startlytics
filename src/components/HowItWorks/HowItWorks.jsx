@@ -161,8 +161,8 @@ const HowItWorks = () => {
           </div>
 
           <div className="text-center mt-30">
-            <div className="inline-flex items-center justify-center space-x-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl cursor-pointer">
-              <button className='cursor-pointer' onClick={handleGoTOUploadCsv}>{token ? 'Upload GoogleSheet' : 'Get Started Now' }</button>
+            <div  onClick={handleGoTOUploadCsv} className="inline-flex items-center justify-center space-x-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl cursor-pointer">
+              <button className='cursor-pointer'>{token ? 'Upload GoogleSheet' : 'Get Started Now' }</button>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
