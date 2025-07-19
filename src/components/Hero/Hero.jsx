@@ -14,7 +14,7 @@ import { useAuth } from '@/app/AuthPage';
 import { userDetails } from '@/app/UserDetails/loggedInUserDetails';
 import { loadUserFromLocalStorage, loadTokenFromLocalStorage } from '../Redux/AuthSlice';
 import { useThemeColor } from '@/hooks/themeColors';
-import { TypewriterText } from '@/app/Animation/TypeTextWrite';
+// import { TypewriterText } from '@/app/Animation/TypeTextWrite';
 
 const Hero = () => {
   const [ isModalOpen, setIsModalOpen ] = useState( false );
@@ -22,7 +22,7 @@ const Hero = () => {
   const dispatch = useDispatch();
   const token = useSelector( ( state ) => state?.userLocalSlice.token )
 
-  const { background, text } = useThemeColor();
+  const { text } = useThemeColor();
 
   useEffect( () => {
     dispatch( loadTokenFromLocalStorage() )
@@ -64,7 +64,7 @@ const Hero = () => {
             {/* <p style={{color : text.secondary}} className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
               AI-powered analytics platform that turns your CSV files, Google Sheets, and API data into actionable insights for smarter business decisions.
             </p> */}
-            <TypewriterText
+            {/* <TypewriterText
               text="AI-powered analytics platform that turns your CSV files, Google Sheets, and API data into actionable insights for smarter business decisions."
               speed={30}
               startDelay={1000}
@@ -73,7 +73,7 @@ const Hero = () => {
               className="text-xl md:text-2xl mb-12 max-w-3xl mx-auto leading-relaxed"
               style={{ color: text.secondary }}
               color ={text.secondary}
-            />
+            /> */}
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
               <button onClick={handleGetstart} className="cursor-pointer group bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 px-8 py-4 rounded-full text-lg font-semibold transition-all duration-300 hover:scale-105 hover:shadow-2xl flex items-center space-x-2">
