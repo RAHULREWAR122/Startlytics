@@ -43,7 +43,7 @@ export function WelcomePopup({ isOpen, onClose }) {
             onClick={handleGetStarted}
         >
             <div
-                style={{ background: background.secondary , minHeight : '80vh' , maxHeight : "90vh"  }}
+                style={{ background: background.secondary , maxHeight : "90vh"  }}
                 className={`bg-white rounded-xl overflow-y-auto custom_scrollbar sm:rounded-2xl shadow-2xl 
                     w-full max-w-[400px] sm:max-w-md md:max-w-lg lg:max-w-xl
                     mx-3 sm:mx-4 
@@ -89,7 +89,7 @@ export function WelcomePopup({ isOpen, onClose }) {
                         </h3>
                     </div>
 
-                    <div className={`text-center mt-[-15px] mb-1 sm:mb-8 space-y-2 sm:space-y-4 transition-all duration-500 delay-200 ${
+                    <div className={`text-center  mb-1 sm:mb-8 space-y-2 sm:space-y-4 transition-all duration-500 delay-200 ${
                         isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                     }`}>
                         <p
@@ -126,7 +126,7 @@ export function WelcomePopup({ isOpen, onClose }) {
                             </p>
                             <div
                                 style={{ color: text.secondary }}
-                                className="text-xs text-gray-600  w-full justify-center leading-relaxed"
+                                className="text-xs text-gray-600 space-y-2 mb-2  w-full justify-center leading-relaxed"
                             >
                                 <span>Share your feedback at{' '}</span>
                                 <EmailLink handleGetStarted={handleGetStarted} />
@@ -134,7 +134,7 @@ export function WelcomePopup({ isOpen, onClose }) {
                         </div>
                     </div>
 
-                    <div className={`text-center transition-all mt-[-18px] duration-500 delay-300 ${
+                    <div className={`text-center transition-all mt-[10px] duration-500 delay-300 ${
                         isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                     }`}>
                         <button
