@@ -87,11 +87,9 @@ function Navbar() {
               <Link style={{color : text.primary}} href="/googlesheet" className="text-gray-300 hover:text-white transition-colors duration-300 hover:scale-105">Link Csv Upload</Link>
             </>}
 
-            <Link href="#testimonials" style={{color : text.primary}} className="text-gray-300 hover:text-white transition-colors duration-300 hover:scale-105">Reviews</Link>
-            <Link style={{color : text.primary}} href="#features" className="text-gray-300 hover:text-white transition-colors duration-300 hover:scale-105">Features</Link>
+            <Link style={{color : text.primary}} href="/howtouse" className="text-gray-300 hover:text-white transition-colors duration-300 hover:scale-105">How to Use</Link>
             <Link style={{color : text.primary}} href="/about" className="text-gray-300 hover:text-white transition-colors duration-300 hover:scale-105">About</Link>
-            <Link style={{color : text.primary}} href="#contact" className="text-gray-300 hover:text-white transition-colors duration-300 hover:scale-105">Contact</Link>
-
+          
             {user?.name ? <div onClick={() => router.push( '/profile' )} className='rounded-[50px] bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 h-10 w-10 text-white flex justify-center items-center'>{user?.name[ 0 ]}</div> :
               <button onClick={() => dispatch( openLoginModal() )} className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 px-6 py-2 rounded-full text-white font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg">
                 Get Started
@@ -124,10 +122,8 @@ function Navbar() {
               <Link onClick={()=>setIsMenuOpen( !isMenuOpen )} style={{color : text.primary}} href="/csvupload" className="text-gray-300 hover:text-white transition-colors duration-300 hover:scale-105">Csv Upload</Link>
               <Link onClick={()=>setIsMenuOpen( !isMenuOpen )} style={{color : text.primary}} href="/googlesheet" className="text-gray-300 hover:text-white transition-colors duration-300 hover:scale-105">Link Csv Upload</Link>
             </>}
-              <Link onClick={()=>setIsMenuOpen( !isMenuOpen )} style={{color : text.primary}} href="/" className="text-gray-300 hover:text-white transition-colors duration-300">Features</Link>
-              <Link onClick={()=>setIsMenuOpen( !isMenuOpen )} style={{color : text.primary}} href="/" className="text-gray-300 hover:text-white transition-colors duration-300">Pricing</Link>
+              <Link onClick={()=>setIsMenuOpen( !isMenuOpen )} style={{color : text.primary}} href="/howtouse" className="text-gray-300 hover:text-white transition-colors duration-300">How To Use</Link>
               <Link onClick={()=>setIsMenuOpen( !isMenuOpen )} style={{color : text.primary}} href="/about" className="text-gray-300 hover:text-white transition-colors duration-300">About</Link>
-              <Link onClick={()=>setIsMenuOpen( !isMenuOpen )} style={{color : text.primary}} href="/" className="text-gray-300 hover:text-white transition-colors duration-300">Contact</Link>
               
               {user?.name ? <div onClick={() => {router.push( '/profile' ) ;setIsMenuOpen( !isMenuOpen ) }} className='bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 h-10 w-auto rounded-sm text-white flex justify-start px-6 items-center'>{user?.name}</div> :
               <button  onClick={() => {dispatch( openLoginModal() );setIsMenuOpen( !isMenuOpen )}} className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 px-6 py-2 rounded-sm text-white text-start font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg">

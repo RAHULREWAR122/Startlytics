@@ -4,7 +4,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useThemeColor } from '@/hooks/themeColors';
-
+import { WelcomePopup } from '../WelcomePopup/WelcomePopup';
 import Features from '../Features/Features';
 import { openLoginModal } from '../Redux/LoginModal';
 import { useDispatch , useSelector} from 'react-redux';
@@ -21,13 +21,25 @@ export default function HomePage() {
   const token = useSelector((state)=>state?.userLocalSlice.token)
   const user = useSelector((state)=>state?.userLocalSlice.user)
   const {background , text} = useThemeColor(); 
- 
+  const [showWelcome, setShowWelcome] = useState(false);
    
     useEffect(()=>{
         dispatch(loadTokenFromLocalStorage())
         dispatch(loadUserFromLocalStorage())
     },[dispatch])
   
+     useEffect(() => {
+      if(typeof window !== 'undefined'){
+        const hasVisited = localStorage.getItem('startlytics-visited');
+        if (!hasVisited) {
+          let timer = setTimeout(()=>{
+            setShowWelcome(true)
+          },8000)
+
+          return ()=> clearTimeout(timer)
+        };
+      }
+    }, []);
   
     
   const getStart = ()=>{
@@ -58,7 +70,10 @@ export default function HomePage() {
       </Head>
       
        <main style={{background : background.secondary}} className="bg-gray-900 text-white ">
-       
+       <WelcomePopup 
+        isOpen={showWelcome} 
+        onClose={() => setShowWelcome(false)} 
+      />
        <Hero/>
        <HowItWorks/>
        <Features/>
