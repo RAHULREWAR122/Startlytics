@@ -43,7 +43,7 @@ export function WelcomePopup({ isOpen, onClose }) {
             onClick={handleGetStarted}
         >
             <div
-                style={{ background: background.secondary , maxHeight : "90vh"  }}
+                style={{ background: background.secondary , minHeight : '80vh' , maxHeight : "90vh"  }}
                 className={`bg-white rounded-xl overflow-y-auto custom_scrollbar sm:rounded-2xl shadow-2xl 
                     w-full max-w-[400px] sm:max-w-md md:max-w-lg lg:max-w-xl
                     mx-3 sm:mx-4 
