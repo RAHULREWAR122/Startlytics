@@ -133,10 +133,10 @@ function Navbar() {
               <div className="lg:hidden mt-[-10px] cursor-pointer">
               {theme === 'dark' ? 
                 <p  className='flex justify-between bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-2 rounded-sm text-white ' onClick={()=>toggleTheme()}>
-                  <span>Dark</span>  <Sun color={text.primary} />
+                  <span>Light</span>  <Sun color={text.primary} />
                   </p>  :
                 <p className='flex justify-between bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-2 rounded-sm text-white ' onClick={()=>toggleTheme()}>
-                  <span>Light</span> <Moon color={text.reverse}/>
+                  <span>Dark</span> <Moon color={text.reverse}/>
                 </p> 
                }
           </div>
