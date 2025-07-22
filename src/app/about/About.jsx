@@ -81,25 +81,25 @@ export default function AboutPage() {
                   step: "01",
                   title: "Upload Data",
                   description: "Drag & drop CSV files, Excel sheets, or paste Google Sheet links",
-                  icon: "📁"
+                  icon: ""
                 },
                 {
                   step: "02", 
                   title: "Auto Processing",
                   description: "Our AI automatically parses and structures your data securely",
-                  icon: "⚡"
+                  icon: ""
                 },
                 {
                   step: "03",
                   title: "Visualize",
                   description: "View data in intuitive dashboards with interactive charts",
-                  icon: "📊"
+                  icon: ""
                 },
                 {
                   step: "04",
                   title: "Get Insights",
                   description: "Receive AI-powered recommendations for startup growth",
-                  icon: "🚀"
+                  icon: ""
                 }
               ].map((item, index) => (
                 <div key={index} className="relative group">
@@ -167,17 +167,17 @@ export default function AboutPage() {
                   {
                     title: "No Technical Skills Required",
                     description: "Designed for simplicity - anyone can use it without coding knowledge",
-                    icon: "🎯"
+                    icon: ""
                   },
                   {
                     title: "Enterprise-Grade Security",
                     description: "Your data is encrypted and stored securely with industry-standard protocols",
-                    icon: "🔒"
+                    icon: ""
                   },
                   {
                     title: "Startup-Focused",
                     description: "Built specifically for startups with features that matter to growing businesses",
-                    icon: "💡"
+                    icon: ""
                   }
                 ].map((item, index) => (
                   <div key={index} className="text-center space-y-3">
@@ -190,7 +190,6 @@ export default function AboutPage() {
             </div>
           </section>
 
-          {/* CTA Section */}
           <section className="text-center space-y-8">
             <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
               Ready to Transform Your Data?

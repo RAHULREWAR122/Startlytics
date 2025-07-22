@@ -17,7 +17,7 @@ export default function StartlyticsUserGuide() {
           >
             Welcome to{" "}
             <span className="font-medium underline decoration-2 underline-offset-4">
-              Startlytics
+              Startlyticsa
             </span>
           </h1>
           <div 
