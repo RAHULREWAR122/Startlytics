@@ -99,7 +99,6 @@ const HowItWorks = () => {
                 <div className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center ${
                   index % 2 === 1 ? 'lg:grid-flow-col-dense' : ''
                 }`}>
-                  {/* Content */}
                   <div className={`space-y-6 ${index % 2 === 1 ? 'lg:col-start-2' : ''}`}>
                     <div className="flex items-center space-x-4">
                       <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-xl">
@@ -116,14 +115,13 @@ const HowItWorks = () => {
                       {step.description}
                     </p>
                     
-                    <div className="pt-4">
+                    {/* <div className="pt-4">
                       <div className="inline-flex items-center text-purple-400 hover:text-purple-300 transition-colors cursor-pointer">
-                        <span className="mr-2">Learn more</span>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
                       </div>
-                    </div>
+                    </div> */}
                   </div>
 
                   <div className={`relative ${index % 2 === 1 ? 'lg:col-start-1' : ''}`}>
