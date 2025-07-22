@@ -75,10 +75,10 @@ function ChatAi() {
       const errorMessage = {
         id: Date.now() + 1,
         text: error.response?.status === 429 
-          ? "I'm receiving too many requests. Please try again in a moment."
+          ? "The service is currently experiencing high traffic. Please try again in a moment."
           : error.code === 'ECONNABORTED'
-          ? "Request timed out. Please try again."
-          : "Sorry, I'm having trouble responding right now. Please try again.",
+          ? "The service is currently experiencing high traffic. Please try again in a moment."
+          : "The service is currently experiencing high traffic. Please try again in a moment.",
         isBot: true,
         isError: true
       }
