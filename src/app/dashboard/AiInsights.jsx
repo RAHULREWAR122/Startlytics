@@ -18,8 +18,8 @@ const DatasetInsights = ({ datasetId = '', userId='' }) => {
         setLoading(true);
         setError(null);
         
-        const response = await axios.post(`${BASE_URL}/api/users/summary/${datasetId}`,
-        // const response = await axios.post(`http://localhost:5000/api/users/summary/${datasetId}`,
+        // const response = await axios.post(`${BASE_URL}/api/users/summary/${datasetId}`,
+        const response = await axios.post(`http://localhost:5000/api/users/summary/${datasetId}`,
              {
         }, {
           headers: {
@@ -30,7 +30,8 @@ const DatasetInsights = ({ datasetId = '', userId='' }) => {
         
         setInsights(response.data);
       } catch (err) {
-        setError(err.response?.data?.message || 'Failed to fetch insights');
+        setError(err.response?.data?.message || err.response?.data?.error || 'Failed to fetch insights');
+
         console.error('Error fetching insights:', err);
       } finally {
         setLoading(false);
@@ -68,7 +69,7 @@ const DatasetInsights = ({ datasetId = '', userId='' }) => {
       <div  style={{backgroundColor : background.secondary}} className=" bg-slate-900 p-8 w-full">
         <div className="max-w-6xl mx-auto">
           <div className=" border border-red-500/30 rounded-lg p-6 text-center">
-            <div className="text-red-400 text-xl mb-2">⚠️ Error</div>
+            <div className="text-red-400 text-xl mb-2">{error}</div>
             <button 
               onClick={tryAgain}
               className="mt-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"

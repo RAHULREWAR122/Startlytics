@@ -11,7 +11,7 @@ import { useDispatch , useSelector} from 'react-redux';
 import Hero from '../Hero/Hero';
 import Pricing from '../Pricing/Pricing';
 import { loadTokenFromLocalStorage , loadUserFromLocalStorage } from '../Redux/AuthSlice';
-
+import { ToastContainer, toast } from 'react-toastify';
 import Reviews from '../Reviews/Reviews';
 import HowItWorks from '../HowItWorks/HowItWorks';
 export default function HomePage() {

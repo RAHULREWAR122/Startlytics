@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar/Navbar";
 import Footer from "@/components/Home/Footer";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import AuthModals from "./Modals/AuthModal";
 // import ChatAi from "@/Pages/ChatAi/ChatAi";
 import ChatAi from "@/components/ChatAi/ChatAi";
 import Script from 'next/script'
@@ -84,7 +85,8 @@ export default function RootLayout({ children }) {
           <CursorLightEffect />
           <Navbar />
           {children}
-          <ToastContainer />
+          <AuthModals/>
+        
           <ChatAi />
           <Footer />
         </ReduxProvider>

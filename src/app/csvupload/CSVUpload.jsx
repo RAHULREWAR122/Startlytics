@@ -11,6 +11,7 @@ import { useSelector , useDispatch } from 'react-redux';
 import { loadUserFromLocalStorage , loadTokenFromLocalStorage } from '@/components/Redux/AuthSlice';
 import { useThemeColor } from '@/hooks/themeColors';
 import { BASE_URL } from '@/apiLinks';
+import { toast } from 'react-toastify';
 export default function CSVUploadPage() {
   const [dragActive, setDragActive] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
@@ -64,6 +65,7 @@ export default function CSVUploadPage() {
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFiles(e.dataTransfer.files);
+      
     }
   }, []);
 
@@ -101,16 +103,17 @@ export default function CSVUploadPage() {
     
     if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
       setError('Please upload a valid CSV file');
+      toast.error('Please upload a valid CSV file')
       return;
     }
 
     setLoading(true);
     setError(null);
-    console.log('Processing file:', file.name, 'Size:', file.size);
+    // console.log('Processing file:', file.name, 'Size:', file.size);
 
     try {
       const results = await parseCSVFile(file);
-      console.log('Parse results:', results);
+      // console.log('Parse results:', results);
       
       const headers = results.meta.fields || [];
       const rows = results.data || [];
@@ -135,9 +138,9 @@ export default function CSVUploadPage() {
         serverUploaded: false
       };
       
-      console.log('Created file object:', newFile);
+      // console.log('Created file object:', newFile);
       setUploadedFiles(prev => [...prev, newFile]);
-      
+      toast.success('File Ready to Preview.')
       
       setParsedData({
         headers: cleanHeaders,
@@ -153,8 +156,9 @@ export default function CSVUploadPage() {
       });
       
     } catch (error) {
-      console.error('Error parsing CSV:', error);
+      // console.error('Error parsing CSV:', error);
       setError(`Failed to parse CSV: ${error.message}`);
+      toast.error(`Failed to parse CSV: ${error.message}`)
     } finally {
       setLoading(false);
     }
@@ -162,7 +166,7 @@ export default function CSVUploadPage() {
 
   const removeFile = (id) => {
     setUploadedFiles(prev => prev.filter(file => file.id !== id));
-    
+    toast.success('file removed successfully.')
     if (parsedData && parsedData.fileId === id) {
       setParsedData(null);
       setPreviewData(null);
@@ -209,6 +213,7 @@ export default function CSVUploadPage() {
     a.click();
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
+    toast.success('Download successfully');
   };
 
   const uploadToServer = async (file) => {
@@ -216,11 +221,13 @@ export default function CSVUploadPage() {
       const token = getAuthToken();
       if (!token) {
         setError('Authentication token not found. Please login again.');
+        toast.error('invalid token.').
         return;
       }
 
       if (!file.originalFile) {
         setError('Original file not found. Please re-upload the file.');
+        toast.error('Original file not found.')
         return;
       }
 
@@ -228,8 +235,8 @@ export default function CSVUploadPage() {
       setUploadProgress(0);
       setError(null);
 
-      console.log('Starting upload for file:', file.name);
-      console.log('Original file exists:', !!file.originalFile);
+      // console.log('Starting upload for file:', file.name);
+      // console.log('Original file exists:', !!file.originalFile);
 
       const formData = new FormData();
       formData.append('file', file.originalFile);
@@ -242,7 +249,7 @@ export default function CSVUploadPage() {
         }));
       }
 
-      console.log('FormData contents:');
+      // console.log('FormData contents:');
       for (let [key, value] of formData.entries()) {
         console.log(key, value);
       }
@@ -253,22 +260,24 @@ export default function CSVUploadPage() {
         body: formData
       });
 
-      console.log('Upload response status:', response.status);
-      console.log('Upload response headers:', response.headers);
+      // console.log('Upload response status:', response.status);
+      // console.log('Upload response headers:', response.headers);
 
       if (response.status === 401) {
         throw new Error('Unauthorized. Please login again.');
+        toast.error('Unauthorized. Please login again.')
       }
      
         
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Upload error response:', errorText);
+        // console.error('Upload error response:', errorText);
+        toast.error('Upload failed, try again.')
         throw new Error(`Upload failed: ${response.status} ${response.statusText}. ${errorText}`);
       }
 
       const result = await response.json();
-      console.log('Upload successful:', result);
+      // console.log('Upload successful:', result);
       
 
       setUploadedFiles(prev => prev.map(f => 
@@ -276,7 +285,7 @@ export default function CSVUploadPage() {
           ? { ...f, serverUploaded: true, serverId: result.fileId || result.id || result._id }
           : f
       ));
-
+      toast.success(result?.message || 'file uploaded successfully.') 
       setError(null);
       // route.push('/dashboard')
       
@@ -289,56 +298,7 @@ export default function CSVUploadPage() {
     }
   };
 
-  const saveToDashboard = async () => {
-    if (!parsedData || !parsedData.fileId) {
-      setError('No file selected for dashboard save');
-      return;
-    }
-    
-    const file = uploadedFiles.find(f => f.id === parsedData.fileId);
-    if (!file) {
-      setError('File not found');
-      return;
-    }
-    
-    if (!file.serverUploaded) {
-      setError('Please upload the file to server first');
-      return;
-    }
-
-    try {
-      const token = getAuthToken();
-      if (!token) {
-        setError('Authentication token not found. Please login again.');
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
-      const response = await fetch(`${BASE_URL}/api/files/${file.serverId}/save`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-      });
-      
-      if (response.status === 401) {
-        setError('Unauthorized. Please login again.');
-        return;
-      }
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to save to dashboard: ${response.status} ${response.statusText}. ${errorText}`);
-      }
-      
-      alert('File saved to dashboard successfully!');
-    } catch (error) {
-      console.error('Error saving to dashboard:', error);
-      setError(`Failed to save to dashboard: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
+  
    
   useEffect(()=>{
    if(!token || !user?.email){
@@ -475,20 +435,15 @@ export default function CSVUploadPage() {
                         </div>
                       </div>
                       
-                      <div className="flex items-center space-x-2">
-                        <button
+                      <div className="flex flex-wrap space-x-2 justify-between items-center">
+                        <div className='flex space-x-4'>
+                          <button
                           onClick={() => previewFile(file)}
-                          className="p-2 hover:bg-gray-600 rounded-lg transition-colors"
+                          className="px-2 hover:bg-blue-700 py-[1.4px] bg-blue-600 cursor-pointer rounded-md transition-colors"
                           title="Preview"
                         >
-                          <Eye color={text.primary} className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => downloadProcessedFile(file)}
-                          className="p-2 hover:bg-gray-600 rounded-lg transition-colors"
-                          title="Download CSV"
-                        >
-                          <Download color={text.primary} className="w-4 h-4" />
+                          View
+                          {/* <Eye color={text.primary} className="w-4 h-4" /> */}
                         </button>
                         {!file.serverUploaded && (
                           <button
@@ -502,8 +457,18 @@ export default function CSVUploadPage() {
                           </button>
                         )}
                         <button
-                          onClick={() => removeFile(file.id)}
+                          onClick={() => downloadProcessedFile(file)}
                           className="p-2 hover:bg-gray-600 rounded-lg transition-colors"
+                          title="Download CSV"
+                        >
+                          <Download color={text.primary} className="w-4 h-4" />
+                        </button>
+                      
+                        
+                        </div>
+                        <button
+                          onClick={() => removeFile(file.id)}
+                          className="p-2 hover:bg-red-600 bg-red-500 cursor-pointer text-right rounded-lg transition-colors"
                           title="Remove"
                         >
                           <X className="w-4 h-4" />
@@ -516,7 +481,6 @@ export default function CSVUploadPage() {
             </div>
           </div>
 
-          {/* Preview Section */}
           <div style={{background : background.secondary}} className="bg-gray-800 shadow-xl rounded-xl p-6 ">
             <h3 style={{color : text.primary}} className="text-xl font-semibold mb-4">Data Preview</h3>
             {parsedData ? (
@@ -566,28 +530,7 @@ export default function CSVUploadPage() {
                   </table>
                 </div>
 
-                <div className="flex space-x-3">
-                  {previewData && previewData.serverUploaded ? (
-                    <button 
-                      onClick={saveToDashboard}
-                      disabled={loading}
-                      className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {loading ? 'Saving...' : 'Save to Dashboard'}
-                    </button>
-                  ) : (
-                    <div className="flex items-center space-x-2">
-                      <button 
-                        onClick={() => previewData && uploadToServer(previewData)}
-                        disabled={processingToServer || !previewData}
-                        className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {processingToServer ? 'Uploading...' : 'Upload to Server'}
-                      </button>
-                    
-                    </div>
-                  )}
-                </div>
+                
               </div>
             ) : (
               <div className="text-center py-12">

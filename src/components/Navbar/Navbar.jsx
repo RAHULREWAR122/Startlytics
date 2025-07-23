@@ -24,6 +24,7 @@ import { loadUserFromLocalStorage, loadTokenFromLocalStorage } from '../Redux/Au
 import ForgotPasswordModal from '../Hero/ForgotPassword';
 import { useTheme } from '../Redux/ThemeProvider';
 import { useThemeColor } from '@/hooks/themeColors';
+import { ToastContainer } from 'react-toastify';
 function Navbar() {
 
   const [ isMenuOpen, setIsMenuOpen ] = useState( false );
@@ -42,14 +43,8 @@ function Navbar() {
     dispatch( loadTokenFromLocalStorage() )
     dispatch( loadUserFromLocalStorage() )
   }, [ dispatch ] )
- 
-  const loginModal = useSelector( ( state ) => state?.loginModal?.isLoginModalOpen )
-  const registernModal = useSelector( ( state ) => state?.loginModal?.isRegisterModalOpen )
-  const forgotModalOpen = useSelector( ( state ) => state?.loginModal?.isForgotModalOpen )
-
-  // console.log('bg is -' , background.secondary);
   
-
+  
   useEffect( () => {
     const handleScroll = () => setScrollY( window.scrollY );
     window.addEventListener( 'scroll', handleScroll );
@@ -57,11 +52,18 @@ function Navbar() {
   }, [] );
 
   return ( <>
-    {loginModal && <LoginModal />}
-    {registernModal && <Register />}
-    {forgotModalOpen && <ForgotPasswordModal />}
-
-
+        <ToastContainer
+           position="bottom-center"
+           autoClose={3000}
+           hideProgressBar={false}
+           newestOnTop={false}
+           closeOnClick
+           rtl={false}
+           pauseOnFocusLoss
+           draggable
+           pauseOnHover
+           theme= {theme === "light" ? 'light' : 'dark'}
+         />
    <header 
   className={`fixed min-w-[100vw] top-0 z-50 transition-all duration-300 ${scrollY > 50 ? 'backdrop-blur-md shadow-lg' : ''}`}
   style={{

@@ -7,30 +7,7 @@ import { closeLoginModal , openRegisterModal , openLoginModal , closeRegisterMod
 import { useDispatch , useSelector } from 'react-redux';
 import { useThemeColor } from '@/hooks/themeColors';
 import { BASE_URL } from '@/apiLinks';
-
-const Toast = ({ message, type, onClose }) => {
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      onClose();
-    }, 4000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
-  return (
-    <div className={`fixed top-4 right-4 z-[60] px-6 py-4 rounded-lg shadow-lg transform transition-all  duration-300 animate-in slide-in-from-right-full ${
-      type === 'success' ? 'bg-green-600 text-white' : 
-      type === 'error' ? 'bg-red-600 text-white' : 
-      'bg-blue-600 text-white'
-    }`}>
-      <div className="flex items-center justify-between">
-        <span className="font-medium">{message}</span>
-        <button onClick={onClose} className="ml-4 text-white hover:text-gray-200">
-          <X className="w-4 h-4" />
-        </button>
-      </div>
-    </div>
-  );
-};
+import { ToastContainer , toast as toastMsg } from 'react-toastify';
 
 const Register = ({ }) => {
   const [registerForm, setRegisterForm] = useState({
@@ -45,16 +22,7 @@ const Register = ({ }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
-  const [toast, setToast] = useState(null);
   const {background , text} = useThemeColor();
-
-  const showToast = (message, type = 'info') => {
-    setToast({ message, type });
-  };
-
-  const closeToast = () => {
-    setToast(null);
-  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -89,7 +57,7 @@ const Register = ({ }) => {
     e.preventDefault();
     
     if (!validateForm()) {
-      showToast('Please fix the errors in the form', 'error');
+      toastMsg.error('Please check all fields.')
       return;
     }
 
@@ -109,9 +77,8 @@ const Register = ({ }) => {
         timeout: 10000 
       });
 
-      if (response.data) {
-        showToast('Account created successfully! Please check your email to verify your account.', 'success');
-        
+      if (response?.data) {
+        toastMsg.success("Account created successfully")
         setRegisterForm({
           name: '',
           email: '',
@@ -134,21 +101,23 @@ const Register = ({ }) => {
         if (error.response.status === 400) {
           if (errorMessage.toLowerCase().includes('email')) {
             setErrors({ email: errorMessage });
+            toastMsg.error(errorMessage)
           } else if (errorMessage.toLowerCase().includes('password')) {
             setErrors({ password: errorMessage });
+            toastMsg.error(errorMessage)
           } else {
-            showToast(errorMessage, 'error');
+            toastMsg.error(errorMessage)
           }
         } else if (error.response.status === 409) {
           setErrors({ email: 'An account with this email already exists' });
-          showToast('Email already registered. Please use a different email or sign in.', 'error');
+          toastMsg.error('Email already registered. Please use a different email or sign in.')
         } else {
-          showToast(errorMessage, 'error');
+          toastMsg.error(errorMessage)
         }
       } else if (error.request) {
-        showToast('Network error. Please check your connection and try again.', 'error');
+        toastMsg.error('Network error. Please check your connection and try again.')
       } else {
-        showToast('An unexpected error occurred. Please try again.', 'error');
+        toastMsg.error('An unexpected error occurred. Please try again.')
       }
     } finally {
       setIsLoading(false);
@@ -168,7 +137,9 @@ const Register = ({ }) => {
 
   return (
     <>
-      <div onClick={()=>dispatch(closeRegisterModal())} className="fixed inset-0 backdrop-blur-sm bg-black/40 bg-opacity-50 flex items-center justify-center z-100 p-4">
+    {/* <ToastContainer/> */}
+
+      <div onClick={()=>dispatch(closeRegisterModal())} className="fixed inset-0 backdrop-blur-[3px] bg-black/4 bg-opacity-50 flex items-center justify-center z-100 p-4">
         <div style={{background : background.primary}}  onClick={(e)=> e.stopPropagation()} className=" mt-4 rounded-2xl py-4 px-8 w-full max-w-md relative max-h-[90vh] overflow-y-auto">
           <button
             onClick={() => dispatch(closeRegisterModal())}
@@ -177,7 +148,7 @@ const Register = ({ }) => {
           >
             <X className="w-6 h-6" />
           </button>
-
+         
           <div className="text-center mb-6">
             <h2 style={{color : text.secondary}} className="text-3xl font-bold text-white ">Get Started</h2>
           </div>

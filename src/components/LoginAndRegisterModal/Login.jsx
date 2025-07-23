@@ -16,20 +16,13 @@ const LoginModal = ({}) => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
-  const [toast, setToast] = useState(null);
   const [rememberMe, setRememberMe] = useState(false);
   const dispatch = useDispatch();
   
+  
   const {background , text} = useThemeColor();
 
-  const showToast = (message, type = 'info') => {
-    setToast({ message, type });
-  };
-
-  const closeToast = () => {
-    setToast(null);
-  };
-
+ 
   // Form validation
   const validateForm = () => {
     const newErrors = {};
@@ -55,7 +48,7 @@ const LoginModal = ({}) => {
     e.preventDefault();
     
     if (!validateForm()) {
-       toast.error('Please check All Fileds');
+       toast.error('Please check all fields.');
       return;
     }
 
@@ -75,89 +68,42 @@ const LoginModal = ({}) => {
       });
 
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
-      }
-
+      
+      console.log(data);
+      
+      if (data?.success) {
+      
+      toast.success('Login successful!');
       const { token, user } = data;
       dispatch(saveUserToLocalStorage(user));
       dispatch(saveTokenToLocalStorage(token));
-     
-      // userDetails();
-      dispatch(closeLoginModal());
       setLoginForm({ email: '', password: '' });
-      setRememberMe(false); // setTimeout(() => {
-      //   dispatch(closeLoginModal());
-      //   setLoginForm({ email: '', password: '' });
-      //   setRememberMe(false);
-      // }, 1500);
-
-    } catch (error) {
-      console.error('Login failed:', error);
-      
+      setRememberMe(false);
+      setTimeout(()=>{
+        dispatch(closeLoginModal());
+      },1000)
+        
+    }else{
+         toast.error(data?.message)
+      }
+    } catch (error) {      
       if (error.message.includes('Invalid credentials') || error.message.includes('Unauthorized')) {
-        setErrors({ 
-          email: 'Invalid email or password',
-          password: 'Invalid email or password'
-        });
-        showToast('Invalid email or password. Please try again.', 'error');
+        toast.error('Invalid email or password. Please try again.');
       } else if (error.message.includes('not verified')) {
-        showToast('Please verify your email before signing in.', 'error');
+        toast.error('Please verify your email before signing in.');
       } else if (error.message.includes('account locked')) {
-        showToast('Account temporarily locked. Please try again later.', 'error');
+        toast.error('Account temporarily locked. Please try again later.');
       } else {
-        showToast('Login failed. Please check your connection and try again.', 'error');
+        toast.error(error.message ||  'Login failed. Please check your connection and try again.');
       }
     } finally {
       setIsLoading(false);
     }
   };
 
-  // const handleGoogleLogin = async () => {
-  //   setIsGoogleLoading(true);
-    
-  //   try {
-  //     showToast('Initiating Google Sign-In...', 'info');
-      
-  //     // Simulate Google OAuth flow
-  //     // In real implementation, you would use Google OAuth SDK
-  //     await new Promise(resolve => setTimeout(resolve, 2000));
-      
-  //     const mockGoogleUser = {
-  //       token: 'mock-google-jwt-token',
-  //       user: {
-  //         id: 'google-user-123',
-  //         name: 'John Doe',
-  //         email: 'john.doe@gmail.com',
-  //         picture: 'https://via.placeholder.com/150',
-  //         provider: 'google'
-  //       }
-  //     };
-      
-  //     // Store auth data
-  //     localStorage.setItem('authToken', mockGoogleUser.token);
-  //     localStorage.setItem('userData', JSON.stringify(mockGoogleUser.user));
-      
-  //     showToast(`Welcome, ${mockGoogleUser.user.name}!`, 'success');
-      
-  //     setTimeout(() => {
-  //       setShowLoginModal(false);
-  //     }, 1500);
-      
-  //   } catch (error) {
-  //     console.error('Google login failed:', error);
-  //     showToast('Google Sign-In failed. Please try again.', 'error');
-  //   } finally {
-  //     setIsGoogleLoading(false);
-  //   }
-  // };
-
   const switchToRegister = () => {
     dispatch(openRegisterModal())
   };
-
-  
 
   const handleInputChange = (field, value) => {
     setLoginForm({ ...loginForm, [field]: value });
@@ -174,8 +120,8 @@ const LoginModal = ({}) => {
   
   return (
     <>
-     
-      <div onClick={()=>dispatch(closeLoginModal())} className="fixed inset-0 backdrop-blur-sm bg-black/40 bg-opacity-50 flex items-center justify-center z-100 p-4">
+     {/* <ToastContainer/> */}
+      <div onClick={()=>dispatch(closeLoginModal())} className="fixed inset-0 backdrop-blur-[3px] bg-black/3 bg-opacity-50 flex items-center justify-center z-100 p-4">
         <div onClick={(e)=>e.stopPropagation()} style={{background : background.primary}} className="bg-gray-800 rounded-2xl px-8 py-4 w-full max-w-md relative max-h-[85vh] mt-10  overflow-y-auto border border-gray-700 shadow-2xl">
           <button
             onClick={() => dispatch(closeLoginModal())}
@@ -281,35 +227,6 @@ const LoginModal = ({}) => {
               )}
             </button>
           </form>
-
-          {/* <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-600"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-gray-800 text-gray-400">Or continue with</span>
-              </div>
-            </div>
-
-            <button
-              onClick={handleGoogleLogin}
-              disabled={isLoading || isGoogleLoading}
-              className="w-full mt-4 bg-white hover:bg-gray-100 text-gray-900 font-semibold py-3 px-4 rounded-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
-            >
-              {isGoogleLoading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                  Signing in with Google...
-                </>
-              ) : (
-                <>
-                  <Chrome className="w-5 h-5 mr-2" />
-                  Continue with Google
-                </>
-              )}
-            </button>
-          </div> */}
 
           <div className="mt-6 text-center">
             <p style={{color : text.secondary }} className="text-gray-400">

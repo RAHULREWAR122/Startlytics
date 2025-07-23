@@ -7,15 +7,16 @@ import { BASE_URL } from '@/apiLinks';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { useThemeColor } from '@/hooks/themeColors';
+import { toast } from 'react-toastify';
+
 const ForgotPasswordModal = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(1); 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [messageType, setMessageType] = useState(''); 
-   const router = useRouter();
+  const router = useRouter();
+  
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -30,64 +31,61 @@ const ForgotPasswordModal = () => {
       ...formData,
       [e.target.name]: e.target.value
     });
-    if (message) {
-      setMessage('');
-      setMessageType('');
-    }
   };
 
   const verifyEmail = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setMessage('');
-    
-    try {
-      const response = await axios.post(`${BASE_URL}/api/auth/verifyemail`,
-        {email: formData.email },
-        {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        
-      });
-      
-      if (response?.data?.success) {
-        setMessage('Email verified successfully!');
-        setMessageType('success');
-        setTimeout(() => {
-          setStep(2);
-          setMessage('');
-        }, 2000);
-      } else {
-        const errorData =  response?.data;
-        setMessage(errorData.message || 'Email verification failed');
-        setMessageType('error');
-      }
-    } catch (error) {
-      setMessage('Network error. Please try again.');
-      setMessageType('error');
-    } finally {
-      setLoading(false);
+    if(!formData?.email?.trim()){
+       toast.error('Email is required');
+       return;
     }
+    
+    setLoading(true);
+    
+    // try {
+    //   const response = await axios.post(`${BASE_URL}/api/auth/verifyemail`,
+    //     {email: formData.email },
+    //     {
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //     },
+        
+    //   });
+    //   // console.log('data -------- ', response);
+      
+    //   if (response?.data?.success) {
+    //     toast.success('Email verified successfully!');
+        
+    //     setTimeout(() => {
+    //       setStep(2);
+    //     }, 1200);
+    //   } else {
+    //     const errorData =  response?.data;
+    //     toast.error(errorData.message || 'Email verification failed');
+    //   }
+    // } catch (error) {
+    //   toast.error(error?.response?.data?.message || 'Network error. Please try again.');
+    //   console.log('error ---- ', error);
+      
+    // } finally {
+    //   setLoading(false);
+    // }
   };
 
   const updatePassword = async (e) => {
     e.preventDefault();
     
     if (formData.password !== formData.confirmPassword) {
-      setMessage('Passwords do not match');
-      setMessageType('error');
+      toast.error('Passwords do not match');
       return;
     }
 
     if (formData.password.length < 6) {
-      setMessage('Password must be at least 6 characters long');
-      setMessageType('error');
+      toast.error('Password must be at least 6 characters long');
       return;
     }
 
     setLoading(true);
-    setMessage('');
     
     try {
       const response = await axios.post(`${BASE_URL}/api/auth/updatepassword`,
@@ -104,25 +102,20 @@ const ForgotPasswordModal = () => {
        });
 
       if (response?.data?.success) {
-        setMessage('Password updated successfully!');
-        setMessageType('success');
+        toast.success('Password updated successfully!');
         setTimeout(() => {
           setIsOpen(false);
           dispatch(closeForgotModal()); 
           dispatch(openLoginModal())
           setStep(1);
           setFormData({ email: '', password: '', confirmPassword: '' });
-          setMessage('');
-         
-        }, 2000);
+        }, 1500);
       } else {
-        const errorData = await response.json();
-        setMessage(errorData.message || 'Password update failed');
-        setMessageType('error');
+        const errorData = response?.data;
+        toast.error(errorData.message || 'Password update failed');
       }
     } catch (error) {
-      setMessage('Network error. Please try again.');
-      setMessageType('error');
+      toast.error('Network error. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -132,19 +125,15 @@ const ForgotPasswordModal = () => {
     dispatch(closeForgotModal())
     setStep(1);
     setFormData({ email: '', password: '', confirmPassword: '' });
-    setMessage('');
-    setMessageType('');
   };
 
   const goBack = () => {
     setStep(1);
-    setMessage('');
-    setMessageType('');
   };
 
   return (
-        <div onClick={(e)=> dispatch(closeForgotModal())} className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-100 p-4">
-          <div style={{background : background.secondary}} onClick={(e)=>e.stopPropagation()} className="relative bg-slate-800/95 backdrop-blur-xl rounded-2xl p-8 w-full max-w-md shadow-2xl">
+        <div onClick={(e)=> dispatch(closeForgotModal())} className="fixed inset-0 bg-black/4 backdrop-blur-[3px] flex items-center justify-center z-100 p-4">
+          <div style={{background : background.primary}} onClick={(e)=>e.stopPropagation()} className="relative bg-slate-800/95 backdrop-blur-xl rounded-2xl p-8 w-full max-w-md shadow-2xl">
             <button
               onClick={closeModal}
               className="absolute cursor-pointer top-4 right-4 text-slate-400 hover:text-white transition-colors"
@@ -184,22 +173,14 @@ const ForgotPasswordModal = () => {
                     </div>
                   </div>
 
-                 
-
-
-                <div className={`flex ${message ? 'justify-between' : 'justify-end'} items-center w-full`}>
-                    {message && (
-                      <p className={`text-sm ${messageType === 'success' ? 'text-green-400' : 'text-red-400'}`}>
-                        {message}
-                      </p>
-                  )}
-                   
-                   <button onClick={()=>{dispatch(openLoginModal()) ; dispatch(closeForgotModal())}} className='text-blue-400 hover:text-blue-500 cursor-pointer text-[14px] '>Back to Login?</button>
-                </div>
+                  <div className="flex justify-end items-center w-full">
+                    <button onClick={()=>{dispatch(openLoginModal()) ; dispatch(closeForgotModal())}} className='text-blue-400 hover:text-blue-500 cursor-pointer text-[14px] '>Back to Login?</button>
+                  </div>
 
                   <button
                     onClick={verifyEmail}
                     disabled={loading}
+                    required={true}
                     className="w-full cursor-pointer bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-xl transition-all transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-purple-500/20"
                   >
                     {loading ? 'Verifying...' : 'Verify Email'}
@@ -282,9 +263,6 @@ const ForgotPasswordModal = () => {
                     </div>
                   </div>
 
-                  <p className={`text-sm ${messageType === 'success' ? 'text-green-400' : 'text-red-400'}`}>
-                        {message}
-                </p>
                   <button
                     onClick={updatePassword}
                     disabled={loading}
@@ -292,16 +270,11 @@ const ForgotPasswordModal = () => {
                   >
                     {loading ? 'Updating...' : 'Update Password'}
                   </button>
-                   </div>
-                     
-                    </div>
-                  )}
-
-                
+                </div>
               </div>
-          
+            )}
           </div>
-             
+        </div>
   );
 };
 
