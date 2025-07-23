@@ -18,8 +18,8 @@ const DatasetInsights = ({ datasetId = '', userId='' }) => {
         setLoading(true);
         setError(null);
         
-        // const response = await axios.post(`${BASE_URL}/api/users/summary/${datasetId}`,
-        const response = await axios.post(`http://localhost:5000/api/users/summary/${datasetId}`,
+        const response = await axios.post(`${BASE_URL}/api/users/summary/${datasetId}`,
+        // const response = await axios.post(`http://localhost:5000/api/users/summary/${datasetId}`,
              {
         }, {
           headers: {
