@@ -152,7 +152,7 @@ const DatasetInsights = ({ datasetId = '', userId = '' }) => {
                 <div className="max-w-full px-10 mx-auto">
                   <div 
                     style={{ color: text.secondary }} 
-                    className="text-xl md:text-2xl mb-12 leading-relaxed whitespace-pre-line"
+                    className="text-[14px] md:text-[17px] mb-8 leading-relaxed whitespace-pre-line"
                   >
                     {displayedText}
                     {!isTypingComplete && (
@@ -164,7 +164,7 @@ const DatasetInsights = ({ datasetId = '', userId = '' }) => {
                     <div className="mt-6 text-center">
                       <button
                         onClick={handleSubscription}
-                        className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold px-8 py-3 rounded-lg transition-all transform hover:scale-105 shadow-lg"
+                        className="cursor-pointer bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold px-8 py-3 rounded-lg transition-all transform hover:scale-105 shadow-lg"
                       >
                         Take Subscription for Complete Insights
                       </button>
