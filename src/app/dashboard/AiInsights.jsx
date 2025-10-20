@@ -48,32 +48,40 @@ const DatasetInsights = ({ datasetId = '', userId = '' }) => {
     fetchInsights();
   };
 
-  const formatTextWithNumbers = (text, maxChars = 300) => {
-    if (!text) return { lines: [], isTruncated: false };
+  const formatTextWithNumbers = (text, maxChars = 900) => {
+    if (!text) return { formattedText: '', isTruncated: false };
 
-   const lines = text.split('\\n').filter(line => line.trim() !== '');
+    const lines = text.split('\\n').filter(line => line.trim() !== '');
     
     let charCount = 0;
-    let truncatedLines = [];
+    let formattedLines = [];
     let isTruncated = false;
+    let lineNumber = 1;
 
     for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
+      const line = lines[i].trim();
+      if (!line) continue;
+      
+      const numberedLine = `${lineNumber}.  ${line}`;
       
       if (charCount + line.length > maxChars) {
         const remainingChars = maxChars - charCount;
-        if (remainingChars > 0) {
-          truncatedLines.push(line.substring(0, remainingChars) + '...');
+        if (remainingChars > 10) {
+          formattedLines.push(`${lineNumber}.  ${line.substring(0, remainingChars)}...`);
         }
         isTruncated = true;
         break;
       }
       
-      truncatedLines.push(line);
+      formattedLines.push(numberedLine);
       charCount += line.length;
+      lineNumber++;
     }
 
-    return { lines: truncatedLines, isTruncated };
+    return { 
+      formattedText: formattedLines.join('\n'), 
+      isTruncated 
+    };
   };
 
   const handleSubscription = () => {
@@ -126,35 +134,34 @@ const DatasetInsights = ({ datasetId = '', userId = '' }) => {
           <div className="w-full">
             {insights?.summary && (
               <div className="w-full gap-6 mb-8">
-                <div className="max-w-full px-10 mx-auto">
-                  {(() => {
-                    const { lines, isTruncated } = formatTextWithNumbers(insights.summary, 300);
-                    return (
-                      <>
-                        <div style={{ color: text.secondary }} className="space-y-2">
-                          {lines.map((line, index) => (
-                            <div key={index} className="flex items-start gap-3">
-                              <span className="font-bold text-blue-400 flex-shrink-0 min-w-[30px]">
-                                {index + 1}.
-                              </span>
-                              <span className="flex-1">{line}</span>
-                            </div>
-                          ))}
+                {(() => {
+                  const { formattedText, isTruncated } = formatTextWithNumbers(insights.summary, 900);
+                  return (
+                    <>
+                      <TypewriterText
+                        text={formattedText}
+                        speed={30}
+                        startDelay={100}
+                        showCursor={true}
+                        cursorChar=""
+                        className="text-xl md:text-2xl mb-12 max-w-full px-10 mx-auto leading-relaxed whitespace-pre-line"
+                        style={{ color: 'white' }}
+                        textsize={17}
+                        color={text.secondary}
+                      />
+                      {isTruncated && (
+                        <div className="mt-6 text-center px-10">
+                          <button
+                            onClick={handleSubscription}
+                            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold px-8 py-3 rounded-lg transition-all transform hover:scale-105 shadow-lg"
+                          >
+                            Take Subscription for Complete Insights
+                          </button>
                         </div>
-                        {isTruncated && (
-                          <div className="mt-6 text-center">
-                            <button
-                              onClick={handleSubscription}
-                              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold px-8 py-3 rounded-lg transition-all transform hover:scale-105 shadow-lg"
-                            >
-                              Take Subscription for Complete Insights
-                            </button>
-                          </div>
-                        )}
-                      </>
-                    );
-                  })()}
-                </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             )}
 
