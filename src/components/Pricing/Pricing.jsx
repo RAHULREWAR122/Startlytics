@@ -141,7 +141,7 @@ export default function Pricing() {
               <div className="text-center">
                 <Lock className="w-14 h-14 text-white/80 mx-auto mb-4" />
                 <p className="text-white font-bold text-xl mb-1">Coming Soon</p>
-                <p className="text-white/70 text-sm mt-1">Available in Version 2, 2025</p>
+                <p className="text-white/70 text-sm mt-1">Available in Version 2, 2027</p>
               </div>
             </div>
           </div>
@@ -192,7 +192,7 @@ export default function Pricing() {
               <div className="text-center">
                 <Lock className="w-14 h-14 text-white/80 mx-auto mb-4" />
                 <p className="text-white font-bold text-xl mb-1">Coming Soon</p>
-                <p className="text-white/70 text-sm mt-1">Available in Version 2, 2025</p>
+                <p className="text-white/70 text-sm mt-1">Available in Version 2, 2026</p>
               </div>
             </div>
           </div>
